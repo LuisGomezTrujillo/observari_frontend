@@ -1,8 +1,9 @@
+// Usuarios.jsx
 import React, { useState } from "react";
-import { FormUsuario } from "../components/organisms/FormUsuario";
-import axios from "axios";
+import { FormUser } from "../../components/organisms/FormUser";
+import { createUser } from "../../api/usersService";
 
-export const Usuarios = () => {
+export const CreateUser = () => {
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -32,7 +33,7 @@ export const Usuarios = () => {
     setError(null);
 
     try {
-      const response = await axios.post("http://localhost:8000/users/", form);
+      const response = await createUser(form);
       console.log("Usuario creado:", response.data);
     } catch (err) {
       setError("Hubo un error al crear el usuario");
@@ -46,7 +47,7 @@ export const Usuarios = () => {
     <div className="max-w-3xl mx-auto p-4">
       <h2 className="text-2xl font-bold mb-4">Crear Usuario</h2>
       <form onSubmit={handleSubmit} noValidate>
-        <FormUsuario form={form} handleChange={handleChange} />
+        <FormUser form={form} handleChange={handleChange} />
         {Object.values(errors).map((msg, i) => (
           <p key={i} className="text-red-600 text-sm">{msg}</p>
         ))}

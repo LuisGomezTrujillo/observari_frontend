@@ -1,3 +1,6 @@
+.env
+.env.* 
+
 # Logs
 logs
 *.log
@@ -22,3 +25,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Dependencias
+node_modules/
+
+# Build
+dist/
+build/
+
+# Archivos temporales de Vite
+.vite/
+

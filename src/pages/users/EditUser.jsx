@@ -1,86 +1,110 @@
-import React, { useState, useEffect } from 'react';
-import { getUserById, updateUser } from '../../api/usersService';
-import { FormUser } from '../../components/organisms/FormUser';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { getUserById, updateUser } from "../../api/usersService";
+import { InputText } from "../../components/atoms/InputText";
 
-export const EditUser = ({ userId, onUpdateSuccess, onCancel }) => {
-  const [userData, setUserData] = useState({
-    email: '',
-    password: ''
-  });
+export const EditUser = () => {
+  const { id } = useParams(); // 👈 obtiene el user_id desde la URL
+  const navigate = useNavigate();
+
+  const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    loadUserData();
-  }, [userId]);
+    const loadUserData = async () => {
+      try {
+        const data = await getUserById(id);
+        setForm(data);
+      } catch (err) {
+        console.error("Error al obtener el usuario:", err);
+        setError("No se pudo cargar el usuario.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const loadUserData = async () => {
+    if (id) {
+      loadUserData();
+    } else {
+      setError("ID de usuario no proporcionado");
+      setLoading(false);
+    }
+  }, [id]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    if (!form.email?.trim()) newErrors.email = "El correo electrónico es requerido";
+   
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+
     try {
-      const data = await getUserById(userId);
-      setUserData({
-        email: data.email,
-        password: '' // Password field empty for security
-      });
-      setError(null);
+      setLoading(true);
+      await updateUser(id, form);
+      alert("Usuario actualizado correctamente");
+      navigate("/users");
     } catch (err) {
-      setError('Error al cargar los datos del usuario');
-      console.error(err);
+      console.error("Error al actualizar el usuario:", err);
+      setError("Error al actualizar el usuario. Intente nuevamente.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      // Only send fields that have changed
-      const dataToUpdate = {};
-      if (userData.email) dataToUpdate.email = userData.email;
-      if (userData.password) dataToUpdate.password = userData.password;
-      
-      await updateUser(userId, dataToUpdate);
-      onUpdateSuccess();
-    } catch (err) {
-      setError('Error al actualizar el usuario');
-      console.error('Error updating user:', err);
-    }
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setUserData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  if (loading) return <div>Cargando...</div>;
+  if (loading) return <div className="text-center p-4">Cargando...</div>;
+  if (error) return <div className="text-red-600 text-center p-4">{error}</div>;
+  if (!form) return <div className="text-center p-4">No se encontró el usuario</div>;
 
   return (
-    <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-      <form onSubmit={handleSubmit}>
-        <FormUser 
-          form={userData}
-          handleChange={handleChange}
+    <div className="max-w-2xl mx-auto p-4">
+      <h2 className="text-2xl font-bold mb-4">Editar Usuario</h2>
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        <InputText
+          label="Correo Electrónico"
+          name="email"
+          value={form.email}
+          onChange={handleChange}
         />
-        <div className="flex justify-end gap-4">
+
+        {/* Errores de validación */}
+        {Object.entries(errors).map(([field, msg]) => (
+          <p key={field} className="text-red-600 text-sm">{msg}</p>
+        ))}
+
+        {/* Botones */}
+        <div className="flex gap-4 pt-4">
           <button
             type="button"
-            onClick={onCancel}
-            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+            onClick={() => navigate("/users")}
+            className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            disabled={loading}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
           >
-            Actualizar
+            {loading ? "Guardando..." : "Guardar Cambios"}
           </button>
         </div>
       </form>

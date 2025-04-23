@@ -20,8 +20,10 @@ export default function App() {
         <Route path="/users/create" element={<CreateUser />} />
         <Route path="/users/edit" element={<EditUser />} />
         <Route path="/profiles" element={<ListProfiles />} />
+        <Route path="/users/:id" element={<EditUser />} />
         <Route path="/profiles/create" element={<CreateProfile />} />
-        <Route path="/profiles/edit/:id" element={<EditProfile />} />
+        <Route path="/profiles" element={<ListProfiles />} />
+        <Route path="/profiles/:id" element={<EditProfile />} />
       </Routes>
     </Router>
   );

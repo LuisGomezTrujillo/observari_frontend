@@ -9,6 +9,9 @@ import { EditUser } from "./pages/users/EditUser";
 import { ListProfiles } from "./pages/profiles/ListProfiles";
 import { CreateProfile } from "./pages/profiles/CreateProfile";
 import { EditProfile } from "./pages/profiles/EditProfile";
+import { ListRelationships } from "./pages/relationships/ListRelationships";
+import { CreateRelationship } from "./pages/relationships/CreateRelationship";
+import { EditRelationship } from "./pages/relationships/EditRelationship";
 
 export default function App() {
   return (
@@ -24,6 +27,9 @@ export default function App() {
         <Route path="/profiles/create" element={<CreateProfile />} />
         <Route path="/profiles" element={<ListProfiles />} />
         <Route path="/profiles/:id" element={<EditProfile />} />
+        <Route path="/relationships/create" element={<CreateRelationship />} />
+        <Route path="/relationships" element={<ListRelationships />} />
+        <Route path="/relationships/:id" element={<EditRelationship />} />
       </Routes>
     </Router>
   );

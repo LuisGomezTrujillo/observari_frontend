@@ -30,14 +30,14 @@ export const Navbar = () => {
             <User className="w-4 h-4" />
             <Link to="/users" className="hover:underline">Usuarios</Link>
           </li>
-          <li className="flex items-center gap-1">
+          {/* <li className="flex items-center gap-1">
             <Contact className="w-4 h-4" />
             <Link to="/profiles" className="hover:underline">Perfiles</Link>
           </li>
           <li className="flex items-center gap-1">
             <Contact className="w-4 h-4" />
             <Link to="/relationships" className="hover:underline">Relaciones</Link>
-          </li>
+          </li> */}
         </ul>
       </div>
       {open && (
@@ -50,14 +50,14 @@ export const Navbar = () => {
             <User className="w-4 h-4" />
             <Link to="/users" className="block">Usuarios</Link>
           </li>
-          <li className="flex items-center gap-2">
+          {/* <li className="flex items-center gap-2">
             <Contact className="w-4 h-4" />
             <Link to="/profiles" className="block">Perfiles</Link>
           </li>
           <li className="flex items-center gap-2">
             <Contact className="w-4 h-4" />
             <Link to="/relationships" className="block">Relaciones</Link>
-          </li>
+          </li> */}
         </ul>
       )}
     </nav>

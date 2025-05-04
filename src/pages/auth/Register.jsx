@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { FormRegister } from '../../components/organisms/FormRegister';
 import { registerUser } from '../../services/authService';
-// Si estás usando react-toastify, asegúrate de que esté instalado
-// import { toast } from 'react-toastify';
+import { Modal } from '../../components/molecules/Modal';
 
 // Función temporal de toast mientras agregas react-toastify
 const toast = {
@@ -12,9 +10,7 @@ const toast = {
   warning: (msg) => console.warn('WARNING:', msg)
 };
 
-export const Register = () => {
-  const navigate = useNavigate();
-  
+export const RegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwitchToLogin }) => {
   // Inicializar estado del formulario
   const [form, setForm] = useState({
     email: '',
@@ -32,6 +28,20 @@ export const Register = () => {
   useEffect(() => {
     setIsFormReady(true);
   }, []);
+
+  // Reiniciar el formulario cuando se abre el modal
+  useEffect(() => {
+    if (isOpen) {
+      setForm({
+        email: '',
+        password: '',
+        confirmPassword: ''
+      });
+      setErrors({});
+      setSubmitSuccess(false);
+      setSubmitError('');
+    }
+  }, [isOpen]);
 
   // Manejar cambios en los campos del formulario
   const handleChange = (e) => {
@@ -106,17 +116,11 @@ export const Register = () => {
           // Mostrar mensaje de éxito
           toast.success('¡Registro exitoso! Ya puedes iniciar sesión.');
           
-          // Redireccionar al login después de 2 segundos
+          // Notificar al componente padre del éxito y cerrar el modal después de 2 segundos
           setTimeout(() => {
-            navigate('/login');
+            if (onRegisterSuccess) onRegisterSuccess();
+            onClose();
           }, 2000);
-          
-          // Limpiar el formulario
-          setForm({
-            email: '',
-            password: '',
-            confirmPassword: ''
-          });
         } else {
           // Manejar errores específicos
           if (result.status === 400) {
@@ -143,24 +147,14 @@ export const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
-        <div>
-          <h2 className="text-center text-3xl font-extrabold text-gray-900">Crear una cuenta</h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            ¿Ya tienes una cuenta?{' '}
-            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-              Inicia sesión aquí
-            </Link>
-          </p>
-        </div>
-        
+    <Modal isOpen={isOpen} onClose={onClose} title="Crear una cuenta">
+      <div className="space-y-6">
         {submitSuccess ? (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
             <p className="text-center">¡Registro exitoso! Redireccionando al inicio de sesión...</p>
           </div>
         ) : (
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={handleSubmit}>
             {submitError && (
               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                 <p>{submitError}</p>
@@ -188,16 +182,35 @@ export const Register = () => {
             </div>
             
             <div className="text-sm text-center">
-              <p className="mt-2 text-gray-600">
+              <p className="text-gray-600">
                 Al registrarte, aceptas nuestros{' '}
                 <a href="/terms" className="font-medium text-blue-600 hover:text-blue-500">
                   Términos y Condiciones
                 </a>
               </p>
             </div>
+            
+            <div className="text-sm text-center border-t pt-4">
+              <p className="text-gray-600">
+                ¿Ya tienes una cuenta?{' '}
+                <button 
+                  type="button"
+                  onClick={() => {
+                    if (onSwitchToLogin) {
+                      onSwitchToLogin();
+                    } else {
+                      onClose();
+                    }
+                  }} 
+                  className="font-medium text-blue-600 hover:text-blue-500"
+                >
+                  Inicia sesión aquí
+                </button>
+              </p>
+            </div>
           </form>
         )}
       </div>
-    </div>
+    </Modal>
   );
 };

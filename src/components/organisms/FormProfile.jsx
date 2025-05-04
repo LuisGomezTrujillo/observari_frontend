@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { InputText } from "../atoms/InputText";
 import { SelectInput } from "../atoms/SelectiInput";
-import { getUsers } from "../../api/usersService";
+import { getUsers } from "../../services/usersService";
 
 export const FormProfile = ({ form, handleChange }) => {
   const [users, setUsers] = useState([]);

@@ -1,7 +1,7 @@
 // Usuarios.jsx
 import React, { useState } from "react";
 import { FormUser } from "../../components/organisms/FormUser";
-import { createUser } from "../../api/usersService";
+import { createUser } from "../../services/usersService";
 
 export const CreateUser = () => {
   const [form, setForm] = useState({

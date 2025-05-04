@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FormRelationship } from "../../components/organisms/FormRelationship";
-import { createUserRelationship } from "../../api/relationshipsService";
+import { createUserRelationship } from "../../services/relationshipsService";
 
 export const CreateRelationship = () => {
   const [form, setForm] = useState({ user_id: "", related_user_id: "", relationship_type: "" });

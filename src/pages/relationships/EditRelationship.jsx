@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getUserRelationshipById, createUserRelationship } from "../../api/relationshipsService";
+import { getUserRelationshipById, createUserRelationship } from "../../services/relationshipsService";
 import { FormRelationship } from "../../components/organisms/FormRelationship";
 
 export const EditRelationship = () => {

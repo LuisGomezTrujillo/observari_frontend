@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getUsers, deleteUser } from "../../api/usersService";
+import { getUsers, deleteUser } from "../../services/usersService";
 
 export const ListUsers = () => {
   const navigate = useNavigate();

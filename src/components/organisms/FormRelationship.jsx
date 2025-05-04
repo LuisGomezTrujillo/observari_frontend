@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getUsers } from "../../api/usersService";
+import { getUsers } from "../../services/usersService";
 
 export const FormRelationship = ({ form, handleChange }) => {
   const [users, setUsers] = useState([]);

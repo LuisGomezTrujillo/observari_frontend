@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FormProfile } from "../../components/organisms/FormProfile";
-import { getProfileById, updateProfile } from "../../api/profilesService";
+import { getProfileById, updateProfile } from "../../services/profilesService";
 
 export const EditProfile = () => {
   const { id } = useParams();

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FormProfile } from "../../components/organisms/FormProfile";
-import { createProfile } from "../../api/profilesService";
+import { createProfile } from "../../services/profilesService";
 
 export const CreateProfile = () => {
   const [form, setForm] = useState({

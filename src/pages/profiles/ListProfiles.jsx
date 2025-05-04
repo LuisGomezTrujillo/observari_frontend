@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getProfiles, deleteProfile } from "../../api/profilesService";
+import { getProfiles, deleteProfile } from "../../services/profilesService";
 
 export const ListProfiles = () => {
   const navigate = useNavigate();

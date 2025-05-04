@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getUserById, updateUser } from "../../api/usersService";
+import { getUserById, updateUser } from "../../services/usersService";
 import { InputText } from "../../components/atoms/InputText";
 
 export const EditUser = () => {

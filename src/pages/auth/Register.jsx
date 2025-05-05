@@ -1,38 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { FormRegister } from '../../components/organisms/FormRegister';
-import { registerUser } from '../../services/authService';
 import { Modal } from '../../components/molecules/Modal';
+import { registerUser } from '../../services/authService';
 
-// Función temporal de toast mientras agregas react-toastify
-const toast = {
-  success: (msg) => console.log('SUCCESS:', msg),
-  error: (msg) => console.error('ERROR:', msg),
-  warning: (msg) => console.warn('WARNING:', msg)
-};
-
-export const RegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwitchToLogin }) => {
-  // Inicializar estado del formulario
-  const [form, setForm] = useState({
+export const Register = ({ isOpen, onClose, onRegisterSuccess, onSwitchToLogin }) => {
+  const [formData, setFormData] = useState({
     email: '',
     password: '',
     confirmPassword: ''
   });
   
   const [errors, setErrors] = useState({});
-  const [isFormReady, setIsFormReady] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
-
-  // Asegurar que el formulario está listo antes de renderizar
-  useEffect(() => {
-    setIsFormReady(true);
-  }, []);
 
   // Reiniciar el formulario cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
-      setForm({
+      setFormData({
         email: '',
         password: '',
         confirmPassword: ''
@@ -46,7 +31,7 @@ export const RegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwitchToLo
   // Manejar cambios en los campos del formulario
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prevForm => ({
+    setFormData(prevForm => ({
       ...prevForm,
       [name]: value
     }));
@@ -65,23 +50,23 @@ export const RegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwitchToLo
     const newErrors = {};
     
     // Validación de email
-    if (!form.email.trim()) {
+    if (!formData.email.trim()) {
       newErrors.email = 'El correo electrónico es requerido';
-    } else if (!/\S+@\S+\.\S+/.test(form.email)) {
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'El formato del correo electrónico es inválido';
     }
     
     // Validación de contraseña
-    if (!form.password) {
+    if (!formData.password) {
       newErrors.password = 'La contraseña es requerida';
-    } else if (form.password.length < 6) {
+    } else if (formData.password.length < 6) {
       newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
     }
     
     // Validación de confirmación de contraseña
-    if (!form.confirmPassword) {
+    if (!formData.confirmPassword) {
       newErrors.confirmPassword = 'Confirmar la contraseña es requerido';
-    } else if (form.password !== form.confirmPassword) {
+    } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Las contraseñas no coinciden';
     }
     
@@ -94,54 +79,47 @@ export const RegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwitchToLo
     e.preventDefault();
     
     if (validateForm()) {
-      setIsSubmitting(true);
+      setLoading(true);
       setSubmitError('');
       
       try {
         // Crear objeto de datos para enviar a la API
         const userData = {
-          email: form.email,
-          password: form.password
+          email: formData.email,
+          password: formData.password
         };
         
         console.log('Enviando datos de registro:', userData);
         
         // Usar el servicio de autenticación para registrar
-        const result = await registerUser(userData);
+        const response = await registerUser(userData);
         
-        if (result.success) {
-          console.log('Registro exitoso:', result.data);
-          setSubmitSuccess(true);
-          
-          // Mostrar mensaje de éxito
-          toast.success('¡Registro exitoso! Ya puedes iniciar sesión.');
-          
-          // Notificar al componente padre del éxito y cerrar el modal después de 2 segundos
-          setTimeout(() => {
-            if (onRegisterSuccess) onRegisterSuccess();
-            onClose();
-          }, 2000);
-        } else {
-          // Manejar errores específicos
-          if (result.status === 400) {
-            if (result.message && result.message.includes("email ya está en uso")) {
-              setErrors(prev => ({ ...prev, email: "El email ya está en uso" }));
-              toast.error("El email ya está en uso");
-            } else {
-              setSubmitError(result.message || 'Error en los datos enviados');
-              toast.error(result.message || 'Error en los datos enviados');
-            }
-          } else {
-            setSubmitError(result.message || 'Error de conexión');
-            toast.error(result.message || 'Error de conexión al servidor');
-          }
-        }
+        // Si el registro es exitoso
+        setSubmitSuccess(true);
+        console.log('Registro exitoso:', response);
+        
+        // Notificar al componente padre del éxito y cerrar el modal después de 2 segundos
+        setTimeout(() => {
+          if (onRegisterSuccess) onRegisterSuccess();
+          onClose();
+        }, 2000);
       } catch (error) {
         console.error('Error inesperado al registrar:', error);
-        setSubmitError('Error inesperado al procesar la solicitud.');
-        toast.error('Error inesperado. Por favor, intenta de nuevo más tarde.');
+        
+        if (error.response && error.response.status === 400) {
+          // Error de validación o email duplicado
+          if (error.response.data && error.response.data.detail && 
+              error.response.data.detail.includes("email ya está en uso")) {
+            setErrors(prev => ({ ...prev, email: "El email ya está en uso" }));
+          } else {
+            setSubmitError(error.response.data?.detail || 'Error en los datos enviados');
+          }
+        } else {
+          // Error de red o de otro tipo
+          setSubmitError('Error inesperado al procesar la solicitud.');
+        }
       } finally {
-        setIsSubmitting(false);
+        setLoading(false);
       }
     }
   };
@@ -161,23 +139,109 @@ export const RegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwitchToLo
               </div>
             )}
             
-            {isFormReady && (
-              <FormRegister 
-                form={form} 
-                handleChange={handleChange} 
-                errors={errors} 
-              />
-            )}
-            
             <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Correo electrónico
+              </label>
+              <div className="mt-1">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`appearance-none block w-full px-3 py-2 border ${
+                    errors.email ? 'border-red-300' : 'border-gray-300'
+                  } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                />
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-600" id="email-error">
+                    {errors.email}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Contraseña
+              </label>
+              <div className="mt-1">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={`appearance-none block w-full px-3 py-2 border ${
+                    errors.password ? 'border-red-300' : 'border-gray-300'
+                  } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                />
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600" id="password-error">
+                    {errors.password}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                Confirmar contraseña
+              </label>
+              <div className="mt-1">
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className={`appearance-none block w-full px-3 py-2 border ${
+                    errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
+                  } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                />
+                {errors.confirmPassword && (
+                  <p className="mt-1 text-sm text-red-600" id="confirmPassword-error">
+                    {errors.confirmPassword}
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                Cancelar
+              </button>
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
-                  isSubmitting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+                disabled={loading}
+                className={`px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                  loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
                 }`}
               >
-                {isSubmitting ? 'Procesando...' : 'Registrarse'}
+                {loading ? (
+                  <>
+                    <span className="inline-block mr-2">
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </span>
+                    Registrando...
+                  </>
+                ) : (
+                  "Registrarse"
+                )}
               </button>
             </div>
             
@@ -195,13 +259,7 @@ export const RegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwitchToLo
                 ¿Ya tienes una cuenta?{' '}
                 <button 
                   type="button"
-                  onClick={() => {
-                    if (onSwitchToLogin) {
-                      onSwitchToLogin();
-                    } else {
-                      onClose();
-                    }
-                  }} 
+                  onClick={onSwitchToLogin} 
                   className="font-medium text-blue-600 hover:text-blue-500"
                 >
                   Inicia sesión aquí
@@ -214,3 +272,220 @@ export const RegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwitchToLo
     </Modal>
   );
 };
+
+// import React, { useState, useEffect } from 'react';
+// import { FormRegister } from '../../components/organisms/FormRegister';
+// import { registerUser } from '../../services/authService';
+// import { Modal } from '../../components/molecules/Modal';
+
+// // Función temporal de toast mientras agregas react-toastify
+// const toast = {
+//   success: (msg) => console.log('SUCCESS:', msg),
+//   error: (msg) => console.error('ERROR:', msg),
+//   warning: (msg) => console.warn('WARNING:', msg)
+// };
+
+// export const RegisterModal = ({ isOpen, onClose, onRegisterSuccess, onSwitchToLogin }) => {
+//   // Inicializar estado del formulario
+//   const [form, setForm] = useState({
+//     email: '',
+//     password: '',
+//     confirmPassword: ''
+//   });
+  
+//   const [errors, setErrors] = useState({});
+//   const [isFormReady, setIsFormReady] = useState(false);
+//   const [isSubmitting, setIsSubmitting] = useState(false);
+//   const [submitSuccess, setSubmitSuccess] = useState(false);
+//   const [submitError, setSubmitError] = useState('');
+
+//   // Asegurar que el formulario está listo antes de renderizar
+//   useEffect(() => {
+//     setIsFormReady(true);
+//   }, []);
+
+//   // Reiniciar el formulario cuando se abre el modal
+//   useEffect(() => {
+//     if (isOpen) {
+//       setForm({
+//         email: '',
+//         password: '',
+//         confirmPassword: ''
+//       });
+//       setErrors({});
+//       setSubmitSuccess(false);
+//       setSubmitError('');
+//     }
+//   }, [isOpen]);
+
+//   // Manejar cambios en los campos del formulario
+//   const handleChange = (e) => {
+//     const { name, value } = e.target;
+//     setForm(prevForm => ({
+//       ...prevForm,
+//       [name]: value
+//     }));
+    
+//     // Limpiar error específico cuando el usuario comienza a corregir
+//     if (errors[name]) {
+//       setErrors(prev => ({
+//         ...prev,
+//         [name]: ''
+//       }));
+//     }
+//   };
+
+//   // Validar el formulario
+//   const validateForm = () => {
+//     const newErrors = {};
+    
+//     // Validación de email
+//     if (!form.email.trim()) {
+//       newErrors.email = 'El correo electrónico es requerido';
+//     } else if (!/\S+@\S+\.\S+/.test(form.email)) {
+//       newErrors.email = 'El formato del correo electrónico es inválido';
+//     }
+    
+//     // Validación de contraseña
+//     if (!form.password) {
+//       newErrors.password = 'La contraseña es requerida';
+//     } else if (form.password.length < 6) {
+//       newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
+//     }
+    
+//     // Validación de confirmación de contraseña
+//     if (!form.confirmPassword) {
+//       newErrors.confirmPassword = 'Confirmar la contraseña es requerido';
+//     } else if (form.password !== form.confirmPassword) {
+//       newErrors.confirmPassword = 'Las contraseñas no coinciden';
+//     }
+    
+//     setErrors(newErrors);
+//     return Object.keys(newErrors).length === 0;
+//   };
+
+//   // Manejar envío del formulario
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+    
+//     if (validateForm()) {
+//       setIsSubmitting(true);
+//       setSubmitError('');
+      
+//       try {
+//         // Crear objeto de datos para enviar a la API
+//         const userData = {
+//           email: form.email,
+//           password: form.password
+//         };
+        
+//         console.log('Enviando datos de registro:', userData);
+        
+//         // Usar el servicio de autenticación para registrar
+//         const result = await registerUser(userData);
+        
+//         if (result.success) {
+//           console.log('Registro exitoso:', result.data);
+//           setSubmitSuccess(true);
+          
+//           // Mostrar mensaje de éxito
+//           toast.success('¡Registro exitoso! Ya puedes iniciar sesión.');
+          
+//           // Notificar al componente padre del éxito y cerrar el modal después de 2 segundos
+//           setTimeout(() => {
+//             if (onRegisterSuccess) onRegisterSuccess();
+//             onClose();
+//           }, 2000);
+//         } else {
+//           // Manejar errores específicos
+//           if (result.status === 400) {
+//             if (result.message && result.message.includes("email ya está en uso")) {
+//               setErrors(prev => ({ ...prev, email: "El email ya está en uso" }));
+//               toast.error("El email ya está en uso");
+//             } else {
+//               setSubmitError(result.message || 'Error en los datos enviados');
+//               toast.error(result.message || 'Error en los datos enviados');
+//             }
+//           } else {
+//             setSubmitError(result.message || 'Error de conexión');
+//             toast.error(result.message || 'Error de conexión al servidor');
+//           }
+//         }
+//       } catch (error) {
+//         console.error('Error inesperado al registrar:', error);
+//         setSubmitError('Error inesperado al procesar la solicitud.');
+//         toast.error('Error inesperado. Por favor, intenta de nuevo más tarde.');
+//       } finally {
+//         setIsSubmitting(false);
+//       }
+//     }
+//   };
+
+//   return (
+//     <Modal isOpen={isOpen} onClose={onClose} title="Crear una cuenta">
+//       <div className="space-y-6">
+//         {submitSuccess ? (
+//           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+//             <p className="text-center">¡Registro exitoso! Redireccionando al inicio de sesión...</p>
+//           </div>
+//         ) : (
+//           <form className="space-y-6" onSubmit={handleSubmit}>
+//             {submitError && (
+//               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+//                 <p>{submitError}</p>
+//               </div>
+//             )}
+            
+//             {isFormReady && (
+//               <FormRegister 
+//                 form={form} 
+//                 handleChange={handleChange} 
+//                 errors={errors} 
+//               />
+//             )}
+            
+//             <div>
+//               <button
+//                 type="submit"
+//                 disabled={isSubmitting}
+//                 className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
+//                   isSubmitting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+//                 }`}
+//               >
+//                 {isSubmitting ? 'Procesando...' : 'Registrarse'}
+//               </button>
+//             </div>
+            
+//             <div className="text-sm text-center">
+//               <p className="text-gray-600">
+//                 Al registrarte, aceptas nuestros{' '}
+//                 <a href="/terms" className="font-medium text-blue-600 hover:text-blue-500">
+//                   Términos y Condiciones
+//                 </a>
+//               </p>
+//             </div>
+            
+//             <div className="text-sm text-center border-t pt-4">
+//               <p className="text-gray-600">
+//                 ¿Ya tienes una cuenta?{' '}
+//                 <button 
+//                   type="button"
+//                   onClick={() => {
+//                     if (onSwitchToLogin) {
+//                       onSwitchToLogin();
+//                     } else {
+//                       onClose();
+//                     }
+//                   }} 
+//                   className="font-medium text-blue-600 hover:text-blue-500"
+//                 >
+//                   Inicia sesión aquí
+//                 </button>
+//               </p>
+//             </div>
+//           </form>
+//         )}
+//       </div>
+//     </Modal>
+//   );
+// };

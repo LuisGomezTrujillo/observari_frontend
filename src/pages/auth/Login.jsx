@@ -1,295 +1,148 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Modal } from "../../components/molecules/Modal";
-import { FormLogin } from "../../components/organisms/FormLogin";
-import { requestPasswordReset } from "../../services/authService";
-
-// Función temporal de toast mientras agregas react-toastify
-const toast = {
-  success: (msg) => console.log('SUCCESS:', msg),
-  error: (msg) => console.error('ERROR:', msg),
-  warning: (msg) => console.warn('WARNING:', msg)
-};
+import { useAuth } from "../../contexts/AuthContext";
 
 export const Login = ({ isOpen, onClose, onLoginSuccess, onSwitchToRegister }) => {
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
+  const navigate = useNavigate();
+  const { login, openRegisterModal } = useAuth();
   
-  const [errors, setErrors] = useState({});
-  const [isFormReady, setIsFormReady] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: ""
+  });
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [submitError, setSubmitError] = useState('');
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [resetEmailSent, setResetEmailSent] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [isProcessingReset, setIsProcessingReset] = useState(false);
-
-  // Asegurar que el formulario está listo antes de renderizar
-  useEffect(() => {
-    setIsFormReady(true);
-  }, []);
 
   // Reiniciar el formulario cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
-      setForm({
+      setFormData({
         email: "",
-        password: "",
+        password: ""
       });
-      setErrors({});
+      setError(null);
       setSubmitSuccess(false);
-      setSubmitError('');
-      setShowForgotPassword(false);
-      setResetEmailSent(false);
-      setResetEmail('');
     }
   }, [isOpen]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prevForm => ({
-      ...prevForm,
+    setFormData(prev => ({
+      ...prev,
       [name]: value
     }));
-    
-    // Limpiar error específico cuando el usuario comienza a corregir
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
-  };
-
-  // Manejar cambio en el email para recuperación
-  const handleResetEmailChange = (e) => {
-    setResetEmail(e.target.value);
-    // Limpiar mensajes de error cuando el usuario está escribiendo
-    if (errors.resetEmail) {
-      setErrors(prev => ({ ...prev, resetEmail: '' }));
-    }
-  };
-
-  // Validar el formulario de login
-  const validateForm = () => {
-    const newErrors = {};
-    
-    // Validación de email
-    if (!form.email.trim()) {
-      newErrors.email = 'El correo electrónico es requerido';
-    } else if (!/\S+@\S+\.\S+/.test(form.email)) {
-      newErrors.email = 'El formato del correo electrónico es inválido';
-    }
-    
-    // Validación de contraseña
-    if (!form.password) {
-      newErrors.password = 'La contraseña es requerida';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Validar el email de recuperación
-  const validateResetEmail = () => {
-    if (!resetEmail.trim()) {
-      setErrors(prev => ({ ...prev, resetEmail: 'El correo electrónico es requerido' }));
-      return false;
-    } else if (!/\S+@\S+\.\S+/.test(resetEmail)) {
-      setErrors(prev => ({ ...prev, resetEmail: 'El formato del correo electrónico es inválido' }));
-      return false;
-    }
-    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (validateForm()) {
-      setIsSubmitting(true);
-      setSubmitError('');
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Usar la función de login del contexto
+      const result = await login(formData.email, formData.password);
       
-      try {
-        // Aquí iría la llamada al servicio de autenticación
-        // Por ahora solo simulamos el proceso
-        console.log("Login:", form);
+      if (result.success) {
+        // Mostrar mensaje de éxito
+        setSubmitSuccess(true);
         
-        // Simulación de login exitoso (cambiar por tu servicio real)
+        // Después de un breve retraso, notificar al padre y cerrar el modal
         setTimeout(() => {
-          setSubmitSuccess(true);
-          toast.success("¡Inicio de sesión exitoso!");
-          
-          // Notificar al componente padre del éxito con los datos del usuario
-          setTimeout(() => {
-            if (onLoginSuccess) onLoginSuccess({ email: form.email });
-            onClose();
-          }, 1500);
-        }, 1000);
-        
-      } catch (error) {
-        console.error('Error al iniciar sesión:', error);
-        setSubmitError('Error inesperado al procesar la solicitud.');
-        toast.error('Error inesperado. Por favor, intenta de nuevo más tarde.');
-      } finally {
-        setIsSubmitting(false);
+          if (onLoginSuccess) onLoginSuccess();
+          onClose();
+        }, 1500);
+      } else {
+        setError(result.error);
       }
+    } catch (err) {
+      console.error("Error durante el login:", err);
+      setError("Error al conectar con el servidor. Intente nuevamente.");
+    } finally {
+      setLoading(false);
     }
   };
-
-  // Manejar la solicitud de restablecimiento de contraseña
-  const handlePasswordReset = async (e) => {
-    e.preventDefault();
-    
-    if (validateResetEmail()) {
-      setIsProcessingReset(true);
-      
-      try {
-        // Llamada real al servicio de autenticación
-        const result = await requestPasswordReset(resetEmail);
-        
-        if (result.success) {
-          setResetEmailSent(true);
-          toast.success("¡Instrucciones enviadas! Revisa tu correo electrónico.");
-        } else {
-          setErrors(prev => ({ 
-            ...prev, 
-            resetEmail: result.message || 'Error al procesar la solicitud.' 
-          }));
-          toast.error(result.message || 'Error al procesar la solicitud.');
-        }
-      } catch (error) {
-        console.error('Error en restablecimiento:', error);
-        setErrors(prev => ({ 
-          ...prev, 
-          resetEmail: 'Error inesperado. Por favor, intenta más tarde.' 
-        }));
-        toast.error('Error inesperado. Por favor, intenta de nuevo más tarde.');
-      } finally {
-        setIsProcessingReset(false);
-      }
-    }
-  };
-
-  // Manejar el clic en "Olvidaste tu contraseña"
-  const handleForgotPasswordClick = () => {
-    setShowForgotPassword(true);
-    // Pre-rellenar con el email si ya está ingresado en el formulario de login
-    if (form.email) {
-      setResetEmail(form.email);
-    }
-  };
-
-  // Volver al formulario de login desde la recuperación de contraseña
-  const handleBackToLogin = () => {
-    setShowForgotPassword(false);
-    setResetEmailSent(false);
-    setErrors(prev => ({ ...prev, resetEmail: '' }));
-  };
-
-  // Renderizar el formulario de recuperación de contraseña
-  const renderForgotPasswordForm = () => {
-    if (resetEmailSent) {
-      return (
-        <div className="text-center py-6">
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-            <p>Se han enviado las instrucciones para restablecer tu contraseña a:</p>
-            <p className="font-semibold mt-2">{resetEmail}</p>
-          </div>
-          <p className="mb-4">Revisa tu bandeja de entrada y sigue las instrucciones proporcionadas.</p>
-          <button
-            type="button"
-            onClick={handleBackToLogin}
-            className="mt-2 px-4 py-2 text-sm font-medium text-blue-600 underline hover:text-blue-500"
-          >
-            Volver al inicio de sesión
-          </button>
-        </div>
-      );
-    }
-
-    return (
-      <form onSubmit={handlePasswordReset} className="space-y-6">
-        <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-3">
-            Restablecer contraseña
-          </h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Ingresa tu correo electrónico y te enviaremos instrucciones para restablecer tu contraseña.
-          </p>
-          
-          <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700">
-            Correo electrónico
-          </label>
-          <div className="mt-1">
-            <input
-              id="reset-email"
-              name="reset-email"
-              type="email"
-              value={resetEmail}
-              onChange={handleResetEmailChange}
-              required
-              className={`appearance-none block w-full px-3 py-2 border ${
-                errors.resetEmail ? 'border-red-300' : 'border-gray-300'
-              } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-              placeholder="tu@correo.com"
-            />
-            {errors.resetEmail && (
-              <p className="mt-1 text-sm text-red-600">{errors.resetEmail}</p>
-            )}
-          </div>
-        </div>
-
-        <div className="flex justify-between space-x-3">
-          <button
-            type="button"
-            onClick={handleBackToLogin}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-          >
-            Volver
-          </button>
-          <button
-            type="submit"
-            disabled={isProcessingReset}
-            className={`px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-              isProcessingReset ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-            }`}
-          >
-            {isProcessingReset ? 'Enviando...' : 'Enviar instrucciones'}
-          </button>
-        </div>
-      </form>
-    );
+  
+  const handleSwitchToRegister = () => {
+    onClose();
+    openRegisterModal();
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={showForgotPassword ? "Recuperar contraseña" : "Iniciar Sesión"}>
+    <Modal isOpen={isOpen} onClose={onClose} title="Iniciar Sesión">
       <div className="space-y-6">
-        {showForgotPassword ? (
-          renderForgotPasswordForm()
-        ) : submitSuccess ? (
+        {submitSuccess ? (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
             <p className="text-center">¡Inicio de sesión exitoso! Redireccionando...</p>
           </div>
         ) : (
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {submitError && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                <p>{submitError}</p>
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                {error}
               </div>
             )}
             
-            {isFormReady && (
-              <FormLogin 
-                form={form} 
-                handleChange={handleChange} 
-                errors={errors}
-                onForgotPassword={handleForgotPasswordClick}
-              />
-            )}
+            <div className="rounded-md shadow-sm -space-y-px">
+              <div>
+                <label htmlFor="email" className="sr-only">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  placeholder="Email"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="sr-only">
+                  Contraseña
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  placeholder="Contraseña"
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
             
-            <div className="flex justify-end space-x-3">
+            <div className="flex items-center justify-between mt-2">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                  Recordarme
+                </label>
+              </div>
+
+              <div className="text-sm">
+                <button
+                  type="button"
+                  className="font-medium text-blue-600 hover:text-blue-500"
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-4">
               <button
                 type="button"
                 onClick={onClose}
@@ -299,12 +152,24 @@ export const Login = ({ isOpen, onClose, onLoginSuccess, onSwitchToRegister }) =
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={loading}
                 className={`px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                  isSubmitting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                  loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
                 }`}
               >
-                {isSubmitting ? 'Procesando...' : 'Iniciar Sesión'}
+                {loading ? (
+                  <>
+                    <span className="inline-block mr-2">
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </span>
+                    Iniciando sesión...
+                  </>
+                ) : (
+                  "Iniciar sesión"
+                )}
               </button>
             </div>
             
@@ -313,13 +178,7 @@ export const Login = ({ isOpen, onClose, onLoginSuccess, onSwitchToRegister }) =
                 ¿No tienes una cuenta?{' '}
                 <button 
                   type="button"
-                  onClick={() => {
-                    if (onSwitchToRegister) {
-                      onSwitchToRegister();
-                    } else {
-                      onClose();
-                    }
-                  }} 
+                  onClick={handleSwitchToRegister} 
                   className="font-medium text-blue-600 hover:text-blue-500"
                 >
                   Regístrate aquí
@@ -334,297 +193,153 @@ export const Login = ({ isOpen, onClose, onLoginSuccess, onSwitchToRegister }) =
 };
 
 // import React, { useState, useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { loginUser } from "../../services/usersService";
 // import { Modal } from "../../components/molecules/Modal";
-// import { FormLogin } from "../../components/organisms/FormLogin";
-// import { requestPasswordReset } from "../../services/authService";
-
-// // Función temporal de toast mientras agregas react-toastify
-// const toast = {
-//   success: (msg) => console.log('SUCCESS:', msg),
-//   error: (msg) => console.error('ERROR:', msg),
-//   warning: (msg) => console.warn('WARNING:', msg)
-// };
 
 // export const Login = ({ isOpen, onClose, onLoginSuccess, onSwitchToRegister }) => {
-//   const [form, setForm] = useState({
+//   const navigate = useNavigate();
+//   const [formData, setFormData] = useState({
 //     email: "",
-//     password: "",
+//     password: ""
 //   });
-  
-//   const [errors, setErrors] = useState({});
-//   const [isFormReady, setIsFormReady] = useState(false);
-//   const [isSubmitting, setIsSubmitting] = useState(false);
+//   const [error, setError] = useState(null);
+//   const [loading, setLoading] = useState(false);
 //   const [submitSuccess, setSubmitSuccess] = useState(false);
-//   const [submitError, setSubmitError] = useState('');
-//   const [showForgotPassword, setShowForgotPassword] = useState(false);
-//   const [resetEmailSent, setResetEmailSent] = useState(false);
-//   const [resetEmail, setResetEmail] = useState('');
-//   const [isProcessingReset, setIsProcessingReset] = useState(false);
-
-//   // Asegurar que el formulario está listo antes de renderizar
-//   useEffect(() => {
-//     setIsFormReady(true);
-//   }, []);
 
 //   // Reiniciar el formulario cuando se abre el modal
 //   useEffect(() => {
 //     if (isOpen) {
-//       setForm({
+//       setFormData({
 //         email: "",
-//         password: "",
+//         password: ""
 //       });
-//       setErrors({});
+//       setError(null);
 //       setSubmitSuccess(false);
-//       setSubmitError('');
-//       setShowForgotPassword(false);
-//       setResetEmailSent(false);
-//       setResetEmail('');
 //     }
 //   }, [isOpen]);
 
 //   const handleChange = (e) => {
 //     const { name, value } = e.target;
-//     setForm(prevForm => ({
-//       ...prevForm,
+//     setFormData(prev => ({
+//       ...prev,
 //       [name]: value
 //     }));
-    
-//     // Limpiar error específico cuando el usuario comienza a corregir
-//     if (errors[name]) {
-//       setErrors(prev => ({
-//         ...prev,
-//         [name]: ''
-//       }));
-//     }
-//   };
-
-//   // Manejar cambio en el email para recuperación
-//   const handleResetEmailChange = (e) => {
-//     setResetEmail(e.target.value);
-//     // Limpiar mensajes de error cuando el usuario está escribiendo
-//     if (errors.resetEmail) {
-//       setErrors(prev => ({ ...prev, resetEmail: '' }));
-//     }
-//   };
-
-//   // Validar el formulario de login
-//   const validateForm = () => {
-//     const newErrors = {};
-    
-//     // Validación de email
-//     if (!form.email.trim()) {
-//       newErrors.email = 'El correo electrónico es requerido';
-//     } else if (!/\S+@\S+\.\S+/.test(form.email)) {
-//       newErrors.email = 'El formato del correo electrónico es inválido';
-//     }
-    
-//     // Validación de contraseña
-//     if (!form.password) {
-//       newErrors.password = 'La contraseña es requerida';
-//     }
-    
-//     setErrors(newErrors);
-//     return Object.keys(newErrors).length === 0;
-//   };
-
-//   // Validar el email de recuperación
-//   const validateResetEmail = () => {
-//     if (!resetEmail.trim()) {
-//       setErrors(prev => ({ ...prev, resetEmail: 'El correo electrónico es requerido' }));
-//       return false;
-//     } else if (!/\S+@\S+\.\S+/.test(resetEmail)) {
-//       setErrors(prev => ({ ...prev, resetEmail: 'El formato del correo electrónico es inválido' }));
-//       return false;
-//     }
-//     return true;
 //   };
 
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
-    
-//     if (validateForm()) {
-//       setIsSubmitting(true);
-//       setSubmitError('');
+//     setLoading(true);
+//     setError(null);
+
+//     try {
+//       // Llamamos al servicio de login
+//       const data = await loginUser(formData.email, formData.password);
       
-//       try {
-//         // Aquí iría la llamada al servicio de autenticación
-//         // Por ahora solo simulamos el proceso
-//         console.log("Login:", form);
+//       // Si el login es exitoso
+//       if (data.access_token) {
+//         localStorage.setItem("user_logged", "true");
         
-//         // Simulación de login exitoso (cambiar por tu servicio real)
+//         // Mostrar mensaje de éxito
+//         setSubmitSuccess(true);
+        
+//         // Después de un breve retraso, notificar al padre y cerrar el modal
 //         setTimeout(() => {
-//           setSubmitSuccess(true);
-//           toast.success("¡Inicio de sesión exitoso!");
-          
-//           // Notificar al componente padre del éxito y cerrar el modal
-//           setTimeout(() => {
-//             if (onLoginSuccess) onLoginSuccess();
-//             onClose();
-//           }, 1500);
-//         }, 1000);
-        
-//       } catch (error) {
-//         console.error('Error al iniciar sesión:', error);
-//         setSubmitError('Error inesperado al procesar la solicitud.');
-//         toast.error('Error inesperado. Por favor, intenta de nuevo más tarde.');
-//       } finally {
-//         setIsSubmitting(false);
+//           if (onLoginSuccess) onLoginSuccess();
+//           // Opcional: redirigir a la página de usuarios
+//           // navigate("/users");
+//           onClose();
+//         }, 1500);
 //       }
-//     }
-//   };
-
-//   // Manejar la solicitud de restablecimiento de contraseña
-//   const handlePasswordReset = async (e) => {
-//     e.preventDefault();
-    
-//     if (validateResetEmail()) {
-//       setIsProcessingReset(true);
+//     } catch (err) {
+//       console.error("Error durante el login:", err);
       
-//       try {
-//         // Llamada real al servicio de autenticación
-//         const result = await requestPasswordReset(resetEmail);
-        
-//         if (result.success) {
-//           setResetEmailSent(true);
-//           toast.success("¡Instrucciones enviadas! Revisa tu correo electrónico.");
-//         } else {
-//           setErrors(prev => ({ 
-//             ...prev, 
-//             resetEmail: result.message || 'Error al procesar la solicitud.' 
-//           }));
-//           toast.error(result.message || 'Error al procesar la solicitud.');
-//         }
-//       } catch (error) {
-//         console.error('Error en restablecimiento:', error);
-//         setErrors(prev => ({ 
-//           ...prev, 
-//           resetEmail: 'Error inesperado. Por favor, intenta más tarde.' 
-//         }));
-//         toast.error('Error inesperado. Por favor, intenta de nuevo más tarde.');
-//       } finally {
-//         setIsProcessingReset(false);
+//       if (err.response) {
+//         // Error específico de la API
+//         setError(err.response.data?.detail || "Credenciales incorrectas.");
+//       } else {
+//         // Error de red o de otro tipo
+//         setError("Error al conectar con el servidor. Intente nuevamente.");
 //       }
+//     } finally {
+//       setLoading(false);
 //     }
-//   };
-
-//   // Manejar el clic en "Olvidaste tu contraseña"
-//   const handleForgotPasswordClick = () => {
-//     setShowForgotPassword(true);
-//     // Pre-rellenar con el email si ya está ingresado en el formulario de login
-//     if (form.email) {
-//       setResetEmail(form.email);
-//     }
-//   };
-
-//   // Volver al formulario de login desde la recuperación de contraseña
-//   const handleBackToLogin = () => {
-//     setShowForgotPassword(false);
-//     setResetEmailSent(false);
-//     setErrors(prev => ({ ...prev, resetEmail: '' }));
-//   };
-
-//   // Renderizar el formulario de recuperación de contraseña
-//   const renderForgotPasswordForm = () => {
-//     if (resetEmailSent) {
-//       return (
-//         <div className="text-center py-6">
-//           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-//             <p>Se han enviado las instrucciones para restablecer tu contraseña a:</p>
-//             <p className="font-semibold mt-2">{resetEmail}</p>
-//           </div>
-//           <p className="mb-4">Revisa tu bandeja de entrada y sigue las instrucciones proporcionadas.</p>
-//           <button
-//             type="button"
-//             onClick={handleBackToLogin}
-//             className="mt-2 px-4 py-2 text-sm font-medium text-blue-600 underline hover:text-blue-500"
-//           >
-//             Volver al inicio de sesión
-//           </button>
-//         </div>
-//       );
-//     }
-
-//     return (
-//       <form onSubmit={handlePasswordReset} className="space-y-6">
-//         <div>
-//           <h3 className="text-lg font-medium text-gray-900 mb-3">
-//             Restablecer contraseña
-//           </h3>
-//           <p className="text-sm text-gray-600 mb-4">
-//             Ingresa tu correo electrónico y te enviaremos instrucciones para restablecer tu contraseña.
-//           </p>
-          
-//           <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700">
-//             Correo electrónico
-//           </label>
-//           <div className="mt-1">
-//             <input
-//               id="reset-email"
-//               name="reset-email"
-//               type="email"
-//               value={resetEmail}
-//               onChange={handleResetEmailChange}
-//               required
-//               className={`appearance-none block w-full px-3 py-2 border ${
-//                 errors.resetEmail ? 'border-red-300' : 'border-gray-300'
-//               } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-//               placeholder="tu@correo.com"
-//             />
-//             {errors.resetEmail && (
-//               <p className="mt-1 text-sm text-red-600">{errors.resetEmail}</p>
-//             )}
-//           </div>
-//         </div>
-
-//         <div className="flex justify-between space-x-3">
-//           <button
-//             type="button"
-//             onClick={handleBackToLogin}
-//             className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-//           >
-//             Volver
-//           </button>
-//           <button
-//             type="submit"
-//             disabled={isProcessingReset}
-//             className={`px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-//               isProcessingReset ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-//             }`}
-//           >
-//             {isProcessingReset ? 'Enviando...' : 'Enviar instrucciones'}
-//           </button>
-//         </div>
-//       </form>
-//     );
 //   };
 
 //   return (
-//     <Modal isOpen={isOpen} onClose={onClose} title={showForgotPassword ? "Recuperar contraseña" : "Iniciar Sesión"}>
+//     <Modal isOpen={isOpen} onClose={onClose} title="Iniciar Sesión">
 //       <div className="space-y-6">
-//         {showForgotPassword ? (
-//           renderForgotPasswordForm()
-//         ) : submitSuccess ? (
+//         {submitSuccess ? (
 //           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
 //             <p className="text-center">¡Inicio de sesión exitoso! Redireccionando...</p>
 //           </div>
 //         ) : (
 //           <form className="space-y-6" onSubmit={handleSubmit}>
-//             {submitError && (
-//               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-//                 <p>{submitError}</p>
+//             {error && (
+//               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+//                 {error}
 //               </div>
 //             )}
             
-//             {isFormReady && (
-//               <FormLogin 
-//                 form={form} 
-//                 handleChange={handleChange} 
-//                 errors={errors}
-//                 onForgotPassword={handleForgotPasswordClick}
-//               />
-//             )}
+//             <div className="rounded-md shadow-sm -space-y-px">
+//               <div>
+//                 <label htmlFor="email" className="sr-only">
+//                   Email
+//                 </label>
+//                 <input
+//                   id="email"
+//                   name="email"
+//                   type="email"
+//                   autoComplete="email"
+//                   required
+//                   className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+//                   placeholder="Email"
+//                   value={formData.email}
+//                   onChange={handleChange}
+//                 />
+//               </div>
+//               <div>
+//                 <label htmlFor="password" className="sr-only">
+//                   Contraseña
+//                 </label>
+//                 <input
+//                   id="password"
+//                   name="password"
+//                   type="password"
+//                   autoComplete="current-password"
+//                   required
+//                   className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+//                   placeholder="Contraseña"
+//                   value={formData.password}
+//                   onChange={handleChange}
+//                 />
+//               </div>
+//             </div>
             
-//             <div className="flex justify-end space-x-3">
+//             <div className="flex items-center justify-between mt-2">
+//               <div className="flex items-center">
+//                 <input
+//                   id="remember-me"
+//                   name="remember-me"
+//                   type="checkbox"
+//                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+//                 />
+//                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+//                   Recordarme
+//                 </label>
+//               </div>
+
+//               <div className="text-sm">
+//                 <button
+//                   type="button"
+//                   className="font-medium text-blue-600 hover:text-blue-500"
+//                 >
+//                   ¿Olvidaste tu contraseña?
+//                 </button>
+//               </div>
+//             </div>
+
+//             <div className="flex justify-end space-x-3 mt-4">
 //               <button
 //                 type="button"
 //                 onClick={onClose}
@@ -634,12 +349,24 @@ export const Login = ({ isOpen, onClose, onLoginSuccess, onSwitchToRegister }) =
 //               </button>
 //               <button
 //                 type="submit"
-//                 disabled={isSubmitting}
+//                 disabled={loading}
 //                 className={`px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-//                   isSubmitting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+//                   loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
 //                 }`}
 //               >
-//                 {isSubmitting ? 'Procesando...' : 'Iniciar Sesión'}
+//                 {loading ? (
+//                   <>
+//                     <span className="inline-block mr-2">
+//                       <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+//                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+//                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+//                       </svg>
+//                     </span>
+//                     Iniciando sesión...
+//                   </>
+//                 ) : (
+//                   "Iniciar sesión"
+//                 )}
 //               </button>
 //             </div>
             
@@ -648,13 +375,7 @@ export const Login = ({ isOpen, onClose, onLoginSuccess, onSwitchToRegister }) =
 //                 ¿No tienes una cuenta?{' '}
 //                 <button 
 //                   type="button"
-//                   onClick={() => {
-//                     if (onSwitchToRegister) {
-//                       onSwitchToRegister();
-//                     } else {
-//                       onClose();
-//                     }
-//                   }} 
+//                   onClick={onSwitchToRegister} 
 //                   className="font-medium text-blue-600 hover:text-blue-500"
 //                 >
 //                   Regístrate aquí
@@ -667,3 +388,139 @@ export const Login = ({ isOpen, onClose, onLoginSuccess, onSwitchToRegister }) =
 //     </Modal>
 //   );
 // };
+// import React, { useState } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { loginUser } from "../../services/usersService";
+
+// export const Login = () => {
+//   const navigate = useNavigate();
+//   const [formData, setFormData] = useState({
+//     email: "",
+//     password: ""
+//   });
+//   const [error, setError] = useState(null);
+//   const [loading, setLoading] = useState(false);
+
+//   const handleChange = (e) => {
+//     const { name, value } = e.target;
+//     setFormData(prev => ({
+//       ...prev,
+//       [name]: value
+//     }));
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setLoading(true);
+//     setError(null);
+
+//     try {
+//       // Llamamos al servicio de login
+//       const data = await loginUser(formData.email, formData.password);
+      
+//       // Guardamos el token en localStorage (esto ya se hace en loginUser)
+      
+//       // Opcional: guardar información del usuario en localStorage o en estado global
+//       if (data.access_token) {
+//         localStorage.setItem("user_logged", "true");
+        
+//         // Redirigir a la página principal o de usuarios
+//         navigate("/users");
+//       }
+//     } catch (err) {
+//       console.error("Error durante el login:", err);
+      
+//       if (err.response) {
+//         // Error específico de la API
+//         setError(err.response.data?.detail || "Credenciales incorrectas.");
+//       } else {
+//         // Error de red o de otro tipo
+//         setError("Error al conectar con el servidor. Intente nuevamente.");
+//       }
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+//       <div className="max-w-md w-full space-y-8">
+//         <div>
+//           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+//             Iniciar sesión
+//           </h2>
+//         </div>
+        
+//         {error && (
+//           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+//             {error}
+//           </div>
+//         )}
+        
+//         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+//           <div className="rounded-md shadow-sm -space-y-px">
+//             <div>
+//               <label htmlFor="email" className="sr-only">
+//                 Email
+//               </label>
+//               <input
+//                 id="email"
+//                 name="email"
+//                 type="email"
+//                 autoComplete="email"
+//                 required
+//                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+//                 placeholder="Email"
+//                 value={formData.email}
+//                 onChange={handleChange}
+//               />
+//             </div>
+//             <div>
+//               <label htmlFor="password" className="sr-only">
+//                 Contraseña
+//               </label>
+//               <input
+//                 id="password"
+//                 name="password"
+//                 type="password"
+//                 autoComplete="current-password"
+//                 required
+//                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+//                 placeholder="Contraseña"
+//                 value={formData.password}
+//                 onChange={handleChange}
+//               />
+//             </div>
+//           </div>
+
+//           <div>
+//             <button
+//               type="submit"
+//               disabled={loading}
+//               className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
+//                 loading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
+//               } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+//             >
+//               {loading ? (
+//                 <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+//                   <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+//                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+//                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+//                   </svg>
+//                 </span>
+//               ) : (
+//                 <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+//                   <svg className="h-5 w-5 text-blue-400 group-hover:text-blue-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+//                     <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+//                   </svg>
+//                 </span>
+//               )}
+//               {loading ? "Iniciando sesión..." : "Iniciar sesión"}
+//             </button>
+//           </div>
+//         </form>
+//       </div>
+//     </div>
+//   );
+// };
+

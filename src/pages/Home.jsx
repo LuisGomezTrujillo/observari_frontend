@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Login } from "../pages/auth/Login";
-import { RegisterModal } from "../pages/auth/Register";
+import { Register } from "../pages/auth/Register"; // Cambiado de RegisterModal a Register
 import Fundacion1Img from "../assets/fundacion1.jpg";
 import Fundacion2Img from "../assets/fundacion2.jpg";
 import Fundacion3Img from "../assets/fundacion3.jpg"; 
 import LogoImg from "../assets/LogoCasaDelBambino.png";
 import { HeroSection } from "../components/organisms/HeroSection";
+import { AuthFooter } from "../components/molecules/AuthFooter"; // Importar el nuevo componente
 import { isAuthenticated, logout, getCurrentUser } from "../services/authService";
 import { useNavigate } from "react-router-dom";
 
@@ -79,11 +80,6 @@ export const Home = () => {
     navigate("/");
   };
 
-  // Función para redirigir al dashboard
-  const navigateToDashboard = () => {
-    navigate("/dashboard");
-  };
-
   // Función para cambiar entre modales
   const switchToRegister = () => {
     setIsLoginOpen(false);
@@ -95,9 +91,13 @@ export const Home = () => {
     setIsLoginOpen(true);
   };
 
+  // Funciones para manejar los botones del AuthFooter
+  const handleLoginClick = () => setIsLoginOpen(true);
+  const handleRegisterClick = () => setIsRegisterOpen(true);
+
   return (
     <div className="min-h-screen relative">
-      {/* Aplicamos el desenfoque directamente al contenedor principal */}
+      {/* Contenedor principal con efecto de desenfoque cuando hay un modal abierto */}
       <div className={`transition-all duration-300 ${isAnyModalOpen ? "blur-sm" : ""}`}>
         
          <HeroSection 
@@ -109,49 +109,16 @@ export const Home = () => {
           interval={5000}
         />
 
-        {/* Fixed Bottom Buttons - Cambian dependiendo del estado de autenticación */}
-        <div className={`fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm p-4 flex justify-center gap-4 z-20 ${
-          isAnyModalOpen ? "opacity-50 pointer-events-none" : ""
-        }`}>
-          {isLoading ? (
-            <div className="p-2 text-gray-600">Cargando...</div>
-          ) : userAuthenticated ? (
-            <>
-              <div className="flex items-center mr-4">
-                <span className="text-gray-700">
-                  Hola, {currentUser?.full_name || currentUser?.username || "Usuario"}
-                </span>
-              </div>
-              <button 
-                onClick={navigateToDashboard}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full transition-all"
-              >
-                Mi Panel
-              </button>
-              <button 
-                onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full transition-all"
-              >
-                Cerrar Sesión
-              </button>
-            </>
-          ) : (
-            <>
-              <button 
-                onClick={() => setIsLoginOpen(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full transition-all"
-              >
-                Iniciar Sesión
-              </button>
-              <button 
-                onClick={() => setIsRegisterOpen(true)}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full transition-all"
-              >
-                Registrarse
-              </button>
-            </>
-          )}
-        </div>
+        {/* Componente AuthFooter */}
+        <AuthFooter 
+          isLoading={isLoading}
+          userAuthenticated={userAuthenticated}
+          currentUser={currentUser}
+          onLogout={handleLogout}
+          onLogin={handleLoginClick}
+          onRegister={handleRegisterClick}
+          isAnyModalOpen={isAnyModalOpen}
+        />
       </div>
 
       {/* Modales */}
@@ -161,7 +128,7 @@ export const Home = () => {
         onLoginSuccess={handleLoginSuccess}
         onSwitchToRegister={switchToRegister}
       />
-      <RegisterModal 
+      <Register 
         isOpen={isRegisterOpen} 
         onClose={() => setIsRegisterOpen(false)}
         onRegisterSuccess={handleRegisterSuccess}

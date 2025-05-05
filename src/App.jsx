@@ -1,8 +1,11 @@
 import React from "react";
-import './index.css' 
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import './index.css'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { Navbar } from "./components/molecules/Navbar";
 import { Home } from "./pages/Home";
+import { AuthFooter } from "./components/molecules/AuthFooter"
 import { ListUsers } from "./pages/users/ListUsers";
 import { CreateUser } from "./pages/users/CreateUser";
 import { EditUser } from "./pages/users/EditUser";
@@ -15,22 +18,34 @@ import { EditRelationship } from "./pages/relationships/EditRelationship";
 
 export default function App() {
   return (
-    <Router>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/users" element={<ListUsers />} />
-        <Route path="/users/create" element={<CreateUser />} />
-        <Route path="/users/edit" element={<EditUser />} />
-        <Route path="/profiles" element={<ListProfiles />} />
-        <Route path="/users/:id" element={<EditUser />} />
-        <Route path="/profiles/create" element={<CreateProfile />} />
-        <Route path="/profiles" element={<ListProfiles />} />
-        <Route path="/profiles/:id" element={<EditProfile />} />
-        <Route path="/relationships/create" element={<CreateRelationship />} />
-        <Route path="/relationships" element={<ListRelationships />} />
-        <Route path="/relationships/:id" element={<EditRelationship />} />
-      </Routes>
-    </Router>
+    <BrowserRouter>
+      <AuthProvider>
+        <div className="min-h-screen pb-20">
+          <Navbar />
+
+          <div className="container mx-auto p-4">
+            <Routes>
+              <Route path="/" element={<Home />} />
+
+              {/* Rutas protegidas */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/users" element={<ListUsers />} />
+               
+              </Route>
+
+              {/* Ruta para login independiente (opcional si todo está en modales) */}
+              {/* <Route path="/login" element={<LoginPage />} /> */}
+
+              {/* Ruta de fallback */}
+              <Route path="*" element={<div>Página no encontrada</div>} />
+            </Routes>
+          </div>
+
+          <AuthFooter />
+        </div>
+      </AuthProvider>
+    </BrowserRouter>
+
   );
 }
+

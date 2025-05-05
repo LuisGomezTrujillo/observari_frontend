@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Menu, X, Home, User, Contact, LogIn, LogOut } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Login } from "../../pages/auth/Login";
+import { Register } from "../../pages/auth/Register"; // Importamos el componente Register
 import Logo from "../../assets/Logo.png";
 
 export const Navbar = () => {
@@ -12,7 +13,9 @@ export const Navbar = () => {
     currentUser, 
     logout, 
     isLoginModalOpen, 
+    isRegisterModalOpen, 
     openLoginModal, 
+    openRegisterModal, 
     closeModals
   } = useAuth();
 
@@ -23,7 +26,7 @@ export const Navbar = () => {
   };
 
   // Función para manejar inicio de sesión exitoso
-  const handleLoginSuccess = () => {
+  const handleAuthSuccess = () => {
     closeModals();
   };
 
@@ -138,8 +141,18 @@ export const Navbar = () => {
         <Login
           isOpen={isLoginModalOpen}
           onClose={closeModals}
-          onLoginSuccess={handleLoginSuccess}
-          onSwitchToRegister={closeModals}
+          onLoginSuccess={handleAuthSuccess}
+          onSwitchToRegister={openRegisterModal}
+        />
+      )}
+
+      {/* Modal de registro */}
+      {isRegisterModalOpen && (
+        <Register
+          isOpen={isRegisterModalOpen}
+          onClose={closeModals}
+          onRegisterSuccess={handleAuthSuccess}
+          onSwitchToLogin={openLoginModal}
         />
       )}
     </>

@@ -1,6 +1,6 @@
 import { apiClient } from "./api";
 
-const URL = "/profiles";
+const URL = "api/profiles";
 
 export const createProfile = async (data) => {
   try{

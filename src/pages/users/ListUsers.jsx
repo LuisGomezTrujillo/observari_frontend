@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getUsers, deleteUser } from "../../services/usersService";
 import { CreateUser } from "./CreateUser";
 import { EditUser } from "./EditUser";
+import { UserDetails } from "./UserDetails";
 import { useAuth } from "../../contexts/AuthContext";
 
 export const ListUsers = () => {
@@ -20,6 +21,7 @@ export const ListUsers = () => {
   // Estados para los modales
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -82,6 +84,19 @@ export const ListUsers = () => {
     setSelectedUserId(userId);
     // Abrir el modal de edición
     setIsEditModalOpen(true);
+  };
+
+  const handleViewDetails = (userId) => {
+    if (!userId) {
+      console.error("ID de usuario inválido para ver detalles:", userId);
+      alert("Error: El ID de usuario es inválido");
+      return;
+    }
+    
+    // Guardar el ID del usuario seleccionado
+    setSelectedUserId(userId);
+    // Abrir el modal de detalles
+    setIsDetailsModalOpen(true);
   };
 
   const handleDelete = async (id) => {
@@ -209,6 +224,12 @@ export const ListUsers = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm flex space-x-4">
                         <button
+                          onClick={() => handleViewDetails(user.id)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          Detalles
+                        </button>
+                        <button
                           onClick={() => handleEdit(user.id)}
                           className="text-indigo-600 hover:text-indigo-900"
                           disabled={isDeleting}
@@ -275,6 +296,12 @@ export const ListUsers = () => {
         onClose={() => setIsEditModalOpen(false)} 
         userId={selectedUserId}
         onSuccess={loadUsers}
+      />
+      
+      <UserDetails 
+        isOpen={isDetailsModalOpen} 
+        onClose={() => setIsDetailsModalOpen(false)} 
+        userId={selectedUserId}
       />
     </div>
   );

@@ -45,10 +45,7 @@ export const UserDetails = ({ isOpen, onClose, userId }) => {
               
               <div className="text-gray-600">Email:</div>
               <div>{user.email}</div>
-              
-              <div className="text-gray-600">Rol:</div>
-              <div>{user.role || "Usuario"}</div>
-              
+                            
               {user.created_at && (
                 <>
                   <div className="text-gray-600">Creado:</div>

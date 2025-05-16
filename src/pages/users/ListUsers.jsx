@@ -204,9 +204,6 @@ export const ListUsers = () => {
                       Email
                     </th>
                     <th className="px-4 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Rol
-                    </th>
-                    <th className="px-4 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Acciones
                     </th>
                   </tr>
@@ -220,9 +217,6 @@ export const ListUsers = () => {
                         </td>
                         <td className="px-4 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
                           {user.email || "N/A"}
-                        </td>
-                        <td className="px-4 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
-                          {user.role || "Usuario"}
                         </td>
                         <td className="px-4 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm">
                           <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">

@@ -22,7 +22,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <div className="min-h-screen pb-20">
-          <Navbar />
+          {/* <Navbar /> */}
 
           <div className="container mx-auto p-4">
             <Routes>
@@ -47,7 +47,7 @@ export default function App() {
             </Routes>
           </div>
 
-          <AuthFooter />
+          {/* <AuthFooter /> */}
         </div>
       </AuthProvider>
     </BrowserRouter>

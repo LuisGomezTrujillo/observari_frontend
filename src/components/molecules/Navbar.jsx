@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Home, User, Contact, LogIn, LogOut } from "lucide-react";
+import { Menu, X, Home, User, Handshake, Contact, LogIn, LogOut } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Login } from "../../pages/auth/Login";
 import { Register } from "../../pages/auth/Register"; // Importamos el componente Register
@@ -101,7 +101,7 @@ export const Navbar = () => {
                 <Link to="/profiles" className="hover:underline">Perfiles</Link>
               </li>
               <li className="flex items-center gap-1">
-                <Contact className="w-4 h-4" />
+                <Handshake className="w-4 h-4" />
                 <Link to="/relationships" className="hover:underline">Relaciones</Link>
               </li>
             </>
@@ -127,7 +127,7 @@ export const Navbar = () => {
                   <Link to="/profiles" className="block">Perfiles</Link>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Contact className="w-4 h-4" />
+                  <Handshake className="w-4 h-4" />
                   <Link to="/relationships" className="block">Relaciones</Link>
                 </li>
               </>

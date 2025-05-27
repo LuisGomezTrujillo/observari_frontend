@@ -5,7 +5,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { Navbar } from "./components/molecules/Navbar";
 import { Home } from "./pages/Home";
-import { AuthFooter } from "./components/molecules/AuthFooter"
+import { OpenHouse } from "./pages/OpenHouse"
+import { AuthFooter } from "./components/molecules/AuthFooter";
 import { ListUsers } from "./pages/users/ListUsers";
 import { CreateUser } from "./pages/users/CreateUser";
 import { EditUser } from "./pages/users/EditUser";
@@ -22,12 +23,14 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <div className="min-h-screen pb-20">
-          {/* <Navbar /> */}
+          <Navbar />
 
           <div className="container mx-auto p-4">
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/open_house" element={<OpenHouse />} />
               <Route path="/login" element={<Login />} />
+
 
               {/* Rutas protegidas */}
               <Route element={<ProtectedRoute />}>
@@ -47,7 +50,7 @@ export default function App() {
             </Routes>
           </div>
 
-          {/* <AuthFooter /> */}
+          <AuthFooter />
         </div>
       </AuthProvider>
     </BrowserRouter>

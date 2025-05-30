@@ -30,6 +30,8 @@ export const ListRelationships = () => {
   const [error, setError] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredRelationships, setFilteredRelationships] = useState([]);
   
   // Estados para paginación
   const [pagination, setPagination] = useState({
@@ -323,6 +325,31 @@ export const ListRelationships = () => {
     loadData();
   };
 
+  // Función para manejar el cambio en el filtro de búsqueda
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    // Filtrar relaciones según el término de búsqueda
+    if (value.trim() === '') {
+      setFilteredRelationships(relationshipsWithUsers);
+    } else {
+      const lowercasedFilter = value.toLowerCase();
+      const filtered = relationshipsWithUsers.filter(relationship => (
+        relationship.user_name?.toLowerCase().includes(lowercasedFilter) ||
+        relationship.related_user_name?.toLowerCase().includes(lowercasedFilter) ||
+        getRelationshipTypeLabel(relationship.relationship_type)?.toLowerCase().includes(lowercasedFilter) ||
+        relationship.description?.toLowerCase().includes(lowercasedFilter)
+      ));
+      setFilteredRelationships(filtered);
+    }
+  };
+
+  // Update filteredRelationships when relationshipsWithUsers changes
+  useEffect(() => {
+    setFilteredRelationships(relationshipsWithUsers);
+  }, [relationshipsWithUsers]);
+
   // Cargar datos al montar el componente y cuando cambie la autenticación o paginación
   useEffect(() => {
     if (!authLoading) {
@@ -446,14 +473,62 @@ export const ListRelationships = () => {
         </div>
       )}
 
+      {/* Filtro de búsqueda */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Filtrar relaciones
+        </label>
+        <div className="flex">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            placeholder="Buscar por nombre de usuario..."
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+          />
+          <button
+            onClick={() => setSearchTerm('')}
+            className="px-4 py-2 bg-gray-200 rounded-r-lg hover:bg-gray-300 transition-colors"
+          >
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
       {/* Lista de relaciones */}
       {!loading && !error && (
         <>
+          {/* Filtro de búsqueda */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Buscar Relaciones
+            </label>
+            <div className="flex">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                placeholder="Buscar por usuarios o tipo de relación..."
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              />
+              <button
+                onClick={() => setSearchTerm('')}
+                className="px-4 py-2 bg-gray-200 rounded-r-lg text-gray-600 hover:bg-gray-300 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
           {relationshipsWithUsers.length === 0 ? (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
               <div className="text-gray-400 mb-4">
                 <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
                 </svg>
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -468,6 +543,20 @@ export const ListRelationships = () => {
               >
                 Crear Primera Relación
               </button>
+            </div>
+          ) : filteredRelationships.length === 0 && searchTerm ? (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+              <div className="text-gray-400 mb-4">
+                <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No se encontraron relaciones
+              </h3>
+              <p className="text-gray-600">
+                No hay relaciones que coincidan con tu búsqueda.
+              </p>
             </div>
           ) : (
             <>
@@ -498,7 +587,7 @@ export const ListRelationships = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {relationshipsWithUsers.map((relationship) => (
+                      {(searchTerm ? filteredRelationships : relationshipsWithUsers).map((relationship) => (
                         <tr key={relationship.id} className="hover:bg-gray-50">
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {relationship.id}

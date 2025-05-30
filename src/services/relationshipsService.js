@@ -98,11 +98,10 @@ export const getMutualRelationships = async (userId) => {
  */
 export const getRelationshipTypeLabel = (type) => {
   const labels = {
-    friend: 'Amigo',
-    family: 'Familiar',
-    colleague: 'Colega',
-    acquaintance: 'Conocido',
-    other: 'Otro'
+    team: 'team',
+    classmate: 'classmate',
+    family: 'family',
+    sponsor: 'sponsor',
   };
   
   return labels[type] || 'Desconocido';
@@ -114,11 +113,9 @@ export const getRelationshipTypeLabel = (type) => {
  */
 export const getRelationshipTypeOptions = () => {
   return [
-    { value: 'learner', label: 'Aprendiz' },
-    { value: 'guide', label: 'Guía' },
-    { value: 'assistant', label: 'Asistente' },
-    { value: 'administrator', label: 'Coordinador' },
+    { value: 'team', label: 'Equipo Casa del Bambino' },
+    { value: 'classmate', label: 'Compañero aprendiz' },
     { value: 'family', label: 'Familiar' },
-    { value: 'sponsor', label: 'Benefactor' }
+    { value: 'sponsor', label: 'Padrino, Madrina o Patrocinador' }
   ];
 };

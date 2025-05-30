@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Home, User, Handshake, Contact, LogIn, LogOut } from "lucide-react";
+import { Menu, X, Home, User, Handshake, TreeDeciduous, Contact, LogIn, LogOut } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Login } from "../../pages/auth/Login";
 import { Register } from "../../pages/auth/Register"; // Importamos el componente Register
@@ -104,6 +104,10 @@ export const Navbar = () => {
                 <Handshake className="w-4 h-4" />
                 <Link to="/relationships" className="hover:underline">Relaciones</Link>
               </li>
+              <li className="flex items-center gap-1">
+                <TreeDeciduous className="w-4 h-4" />
+                <Link to="/environments" className="hover:underline">Ambientes</Link>
+              </li>
             </>
           )}
         </ul>
@@ -130,6 +134,10 @@ export const Navbar = () => {
                   <Handshake className="w-4 h-4" />
                   <Link to="/relationships" className="block">Relaciones</Link>
                 </li>
+                <li className="flex items-center gap-1">
+                <TreeDeciduous className="w-4 h-4" />
+                <Link to="/environments" className="hover:underline">Ambientes</Link>
+              </li>
               </>
             )}
           </ul>

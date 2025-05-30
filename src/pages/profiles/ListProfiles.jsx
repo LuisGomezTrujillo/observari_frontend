@@ -27,6 +27,8 @@ export const ListProfiles = () => {
   const [error, setError] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredProfiles, setFilteredProfiles] = useState([]);
   
   // Estados para paginación
   const [pagination, setPagination] = useState({
@@ -333,6 +335,49 @@ export const ListProfiles = () => {
     loadData();
   };
 
+  // Función para manejar el cambio en el filtro de búsqueda
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    // Filtrar perfiles según el término de búsqueda
+    if (value.trim() === '') {
+      setFilteredProfiles(profilesWithUsers);
+    } else {
+      const lowercasedFilter = value.toLowerCase();
+      const filtered = profilesWithUsers.filter(profile => {
+        return (
+          profile.user_email?.toLowerCase().includes(lowercasedFilter) ||
+          profile.first_name?.toLowerCase().includes(lowercasedFilter) ||
+          profile.last_name?.toLowerCase().includes(lowercasedFilter) ||
+          profile.role?.toLowerCase().includes(lowercasedFilter) ||
+          profile.description?.toLowerCase().includes(lowercasedFilter)
+        );
+      });
+      setFilteredProfiles(filtered);
+    }
+  };
+
+  const handleSearch = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchTerm(value);
+    
+    const filtered = profilesWithUsers.filter(profile => 
+      profile.first_name?.toLowerCase().includes(value) ||
+      profile.last_name?.toLowerCase().includes(value) ||
+      profile.user_email?.toLowerCase().includes(value) ||
+      profile.role?.toLowerCase().includes(value) ||
+      profile.description?.toLowerCase().includes(value)
+    );
+    
+    setFilteredProfiles(filtered);
+  };
+
+  // Update filteredProfiles when profilesWithUsers changes
+  useEffect(() => {
+    setFilteredProfiles(profilesWithUsers);
+  }, [profilesWithUsers]);
+
   // Cargar datos al montar el componente y cuando cambie la autenticación o paginación
   useEffect(() => {
     if (!authLoading) {
@@ -456,9 +501,58 @@ export const ListProfiles = () => {
         </div>
       )}
 
+      {/* Filtro de búsqueda */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Buscar Perfiles
+        </label>
+        <div className="flex">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            placeholder="Buscar por usuario, nombre, rol..."
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+          />
+          <button
+            onClick={() => setSearchTerm('')}
+            className="px-4 py-2 bg-gray-200 rounded-r-lg text-gray-600 hover:bg-gray-300 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
       {/* Lista de perfiles */}
       {!loading && !error && (
         <>
+          {/* Barra de búsqueda */}
+          <div className="mb-4 max-w-md w-full">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={handleSearch}
+                placeholder="Buscar perfiles..."
+                className="w-full px-4 py-2 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <svg
+                className="absolute right-3 top-2.5 h-5 w-5 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+          </div>
+
           {profilesWithUsers.length === 0 ? (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
               <div className="text-gray-400 mb-4">
@@ -511,7 +605,7 @@ export const ListProfiles = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {profilesWithUsers.map((profile) => (
+                      {(searchTerm ? filteredProfiles : profilesWithUsers).map((profile) => (
                         <tr key={profile.id} className="hover:bg-gray-50">
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {profile.id}
@@ -638,460 +732,3 @@ export const ListProfiles = () => {
     </div>
   );
 };
-// import React, { useState, useEffect } from "react";
-// import { useNavigate } from "react-router-dom";
-// import { getProfiles, deleteProfile } from "../../services/profilesService";
-// import { getUserById } from "../../services/usersService";
-// import { useAuth } from "../../contexts/AuthContext";
-// import { CreateProfile } from "./CreateProfile";
-// import { EditProfile } from "./EditProfile";
-// import { ProfileDetails } from "./ProfileDetails";
-
-// export const ListProfiles = () => {
-//   const navigate = useNavigate();
-//   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  
-//   const [profiles, setProfiles] = useState([]);
-//   const [profilesWithUsers, setProfilesWithUsers] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-//   const [pagination, setPagination] = useState({
-//     skip: 0,
-//     limit: 10
-//   });
-//   const [isDeleting, setIsDeleting] = useState(false);
-  
-//   // Estados para controlar los modales
-//   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-//   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-//   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-//   const [selectedProfileId, setSelectedProfileId] = useState(null);
-
-//   // Verificar autenticación antes de cargar datos
-//   useEffect(() => {
-//     if (!authLoading && !isAuthenticated) {
-//       navigate("/login");
-//     } else if (!authLoading && isAuthenticated) {
-//       loadProfiles();
-//     }
-//   }, [isAuthenticated, authLoading, pagination.skip, pagination.limit, navigate]);
-
-//   // Efecto para cargar los datos de los usuarios una vez que tenemos los perfiles
-//   useEffect(() => {
-//     const fetchUserData = async () => {
-//       if (!profiles || profiles.length === 0) return;
-
-//       try {
-//         const profilesWithUserData = [...profiles];
-        
-//         // Obtener los datos de usuario para cada perfil
-//         for (let i = 0; i < profilesWithUserData.length; i++) {
-//           const profile = profilesWithUserData[i];
-          
-//           if (profile.user_id) {
-//             try {
-//               const userData = await getUserById(profile.user_id);
-//               profilesWithUserData[i] = {
-//                 ...profile,
-//                 user_email: userData.email || "N/A"
-//               };
-//             } catch (err) {
-//               console.error(`Error al obtener datos del usuario ${profile.user_id}:`, err);
-//               profilesWithUserData[i] = {
-//                 ...profile,
-//                 user_email: "Error al cargar"
-//               };
-//             }
-//           } else {
-//             profilesWithUserData[i] = {
-//               ...profile,
-//               user_email: "No asignado"
-//             };
-//           }
-//         }
-        
-//         setProfilesWithUsers(profilesWithUserData);
-//       } catch (err) {
-//         console.error("Error al procesar perfiles con usuarios:", err);
-//         setError("Error al cargar información de usuarios");
-//       }
-//     };
-
-//     fetchUserData();
-//   }, [profiles]);
-
-//   const loadProfiles = async () => {
-//     try {
-//       setLoading(true);
-//       setError(null); // Limpiar errores anteriores
-      
-//       const data = await getProfiles(pagination.skip, pagination.limit);
-      
-//       // Asegurarse de que la respuesta sea un array
-//       if (Array.isArray(data)) {
-//         setProfiles(data);
-//       } else if (data && typeof data === 'object' && Array.isArray(data.profiles)) {
-//         // En caso de que la API devuelva un objeto con una propiedad 'profiles'
-//         setProfiles(data.profiles);
-//       } else {
-//         setProfiles([]);
-//         setError("Formato de respuesta inesperado al cargar perfiles");
-//       }
-//     } catch (err) {
-//       console.error("Error fetching profiles:", err);
-      
-//       // Verificar si el error es de autenticación
-//       if (err.response && err.response.status === 401) {
-//         setError("Sesión expirada o no autorizada. Por favor inicie sesión nuevamente.");
-//         // Redirigir al login después de un breve retraso
-//         setTimeout(() => navigate("/login"), 2000);
-//       } else if (err.response) {
-//         setError(`Error al cargar los perfiles: ${err.response.data?.message || "Error en el servidor"}`);
-//       } else if (err.request) {
-//         setError("No se pudo conectar con el servidor. Verifique su conexión a internet.");
-//       } else {
-//         setError("Error al preparar la solicitud. Por favor intente nuevamente.");
-//       }
-      
-//       setProfiles([]);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleViewDetails = (profileId) => {
-//     if (!profileId) {
-//       console.error("ID de perfil inválido:", profileId);
-//       alert("Error: El ID de perfil es inválido");
-//       return;
-//     }
-    
-//     // Abrir el modal de detalles
-//     setSelectedProfileId(profileId);
-//     setIsDetailsModalOpen(true);
-//   };
-
-//   const handleEdit = (profileId) => {
-//     if (!profileId) {
-//       console.error("ID de perfil inválido:", profileId);
-//       alert("Error: El ID de perfil es inválido");
-//       return;
-//     }
-    
-//     // Abrir el modal de edición
-//     setSelectedProfileId(profileId);
-//     setIsEditModalOpen(true);
-//   };
-
-//   const handleDelete = async (id) => {
-//     if (!id) {
-//       console.error("ID de perfil inválido para eliminar:", id);
-//       alert("Error: El ID de perfil es inválido");
-//       return;
-//     }
-    
-//     if (window.confirm("¿Está seguro de eliminar este perfil?")) {
-//       try {
-//         setIsDeleting(true);
-//         setError(null);
-        
-//         await deleteProfile(id);
-        
-//         // Mostrar mensaje de éxito
-//         alert("Perfil eliminado correctamente");
-        
-//         // Recargar perfiles después de eliminar
-//         loadProfiles();
-//       } catch (err) {
-//         console.error("Error deleting profile:", err);
-        
-//         // Verificar si el error es de autenticación
-//         if (err.response && err.response.status === 401) {
-//           setError("Sesión expirada o no autorizada. Por favor inicie sesión nuevamente.");
-//           setTimeout(() => navigate("/login"), 2000);
-//         } else if (err.response && err.response.status === 404) {
-//           alert("El perfil ya no existe o fue eliminado previamente.");
-//           loadProfiles(); // Actualizar la lista de todos modos
-//         } else if (err.response) {
-//           setError(`Error al eliminar: ${err.response.data?.message || "Error en el servidor"}`);
-//         } else if (err.request) {
-//           setError("No se pudo conectar con el servidor. Verifique su conexión a internet.");
-//         } else {
-//           setError("Error al preparar la solicitud. Por favor intente nuevamente.");
-//         }
-//       } finally {
-//         setIsDeleting(false);
-//       }
-//     }
-//   };
-
-//   // Manejadores para la paginación
-//   const handleNextPage = () => {
-//     if (profiles.length >= pagination.limit) {
-//       setPagination(prev => ({
-//         ...prev,
-//         skip: prev.skip + prev.limit
-//       }));
-//     }
-//   };
-
-//   const handlePreviousPage = () => {
-//     setPagination(prev => ({
-//       ...prev,
-//       skip: Math.max(0, prev.skip - prev.limit)
-//     }));
-//   };
-
-//   // Manejadores para los modales
-//   const handleOpenCreateModal = () => {
-//     setIsCreateModalOpen(true);
-//   };
-
-//   const handleCloseCreateModal = () => {
-//     setIsCreateModalOpen(false);
-//   };
-
-//   const handleCloseEditModal = () => {
-//     setIsEditModalOpen(false);
-//     setSelectedProfileId(null);
-//   };
-
-//   const handleCloseDetailsModal = () => {
-//     setIsDetailsModalOpen(false);
-//     setSelectedProfileId(null);
-//   };
-
-//   const handleProfileCreated = () => {
-//     // Recargar perfiles después de crear uno nuevo
-//     loadProfiles();
-//   };
-
-//   const handleProfileUpdated = () => {
-//     // Recargar perfiles después de actualizar uno existente
-//     loadProfiles();
-//   };
-
-//   // Si todavía está verificando la autenticación, muestra un indicador de carga
-//   if (authLoading) {
-//     return (
-//       <div className="flex justify-center items-center h-screen">
-//         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-//       </div>
-//     );
-//   }
-
-//   // Renderizado de la tarjeta de perfil para vista móvil
-//   const renderProfileCard = (profile) => {
-//     return (
-//       <div key={profile.id} className="bg-white rounded-lg shadow-md p-4 mb-4">
-//         <div className="flex justify-between mb-2">
-//           <div className="font-semibold text-gray-700">Correo:</div>
-//           <div className="text-gray-900">{profile.user_email || "N/A"}</div>
-//         </div>
-//         <div className="flex justify-between mb-2">
-//           <div className="font-semibold text-gray-700">Nombre:</div>
-//           <div className="text-gray-900">{profile.first_name || "N/A"}</div>
-//         </div>
-//         <div className="flex justify-between mb-2">
-//           <div className="font-semibold text-gray-700">Apellido:</div>
-//           <div className="text-gray-900">{profile.last_name || "N/A"}</div>
-//         </div>
-//         <div className="flex justify-between mb-4">
-//           <div className="font-semibold text-gray-700">Rol:</div>
-//           <div className="text-gray-900">{profile.role || "Usuario"}</div>
-//         </div>
-//         <div className="flex justify-center space-x-3 pt-2 border-t">
-//           <button
-//             onClick={() => handleViewDetails(profile.id)}
-//             className="text-blue-600 hover:text-blue-900 px-2 py-1"
-//             disabled={isDeleting}
-//           >
-//             Detalles
-//           </button>
-//           <button
-//             onClick={() => handleEdit(profile.id)}
-//             className="text-indigo-600 hover:text-indigo-900 px-2 py-1"
-//             disabled={isDeleting}
-//           >
-//             Editar
-//           </button>
-//           <button
-//             onClick={() => handleDelete(profile.id)}
-//             className="text-red-600 hover:text-red-900 px-2 py-1"
-//             disabled={isDeleting}
-//           >
-//             {isDeleting ? "Eliminando..." : "Eliminar"}
-//           </button>
-//         </div>
-//       </div>
-//     );
-//   };
-
-//   return (
-//     <div className="container mx-auto px-4 py-8">
-//       {/* Encabezado responsivo */}
-//       <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
-//         <h1 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">Lista de Perfiles</h1>
-//         <button
-//           className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-//           onClick={handleOpenCreateModal}
-//         >
-//           Crear Perfil
-//         </button>
-//       </div>
-
-//       {/* Mensaje de error */}
-//       {error && (
-//         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-//           {error}
-//         </div>
-//       )}
-
-//       {/* Indicador de carga */}
-//       {loading ? (
-//         <div className="flex justify-center">
-//           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-//         </div>
-//       ) : (
-//         <>
-//           {/* Vista móvil (tarjetas) para pantallas pequeñas */}
-//           <div className="md:hidden">
-//             {profilesWithUsers && profilesWithUsers.length > 0 ? (
-//               profilesWithUsers.map(profile => renderProfileCard(profile))
-//             ) : (
-//               <div className="bg-white p-4 rounded-lg shadow text-center text-gray-500">
-//                 No hay perfiles para mostrar
-//               </div>
-//             )}
-//           </div>
-
-//           {/* Vista de tabla para pantallas medianas y grandes con scroll horizontal */}
-//           <div className="hidden md:block overflow-x-auto">
-//             <div className="min-w-full bg-white shadow-md rounded-lg">
-//               <table className="min-w-full divide-y divide-gray-200">
-//                 <thead className="bg-gray-50">
-//                   <tr>
-//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                       Correo Usuario
-//                     </th>
-//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                       Nombre
-//                     </th>
-//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                       Apellido
-//                     </th>
-//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                       Rol
-//                     </th>
-//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                       Acciones
-//                     </th>
-//                   </tr>
-//                 </thead>
-//                 <tbody className="bg-white divide-y divide-gray-200">
-//                   {profilesWithUsers && profilesWithUsers.length > 0 ? (
-//                     profilesWithUsers.map((profile) => (
-//                       <tr key={profile.id}>
-//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-//                           {profile.user_email || "N/A"}
-//                         </td>
-//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-//                           {profile.first_name || "N/A"}
-//                         </td>
-//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-//                           {profile.last_name || "N/A"}
-//                         </td>
-//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-//                           {profile.role || "Usuario"}
-//                         </td>
-//                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-//                           <div className="flex space-x-2">
-//                             <button
-//                               onClick={() => handleViewDetails(profile.id)}
-//                               className="text-blue-600 hover:text-blue-900"
-//                               disabled={isDeleting}
-//                             >
-//                               Detalles
-//                             </button>
-//                             <button
-//                               onClick={() => handleEdit(profile.id)}
-//                               className="text-indigo-600 hover:text-indigo-900"
-//                               disabled={isDeleting}
-//                             >
-//                               Editar
-//                             </button>
-//                             <button
-//                               onClick={() => handleDelete(profile.id)}
-//                               className="text-red-600 hover:text-red-900"
-//                               disabled={isDeleting}
-//                             >
-//                               {isDeleting ? "Eliminando..." : "Eliminar"}
-//                             </button>
-//                           </div>
-//                         </td>
-//                       </tr>
-//                     ))
-//                   ) : (
-//                     <tr>
-//                       <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-//                         No hay perfiles para mostrar
-//                       </td>
-//                     </tr>
-//                   )}
-//                 </tbody>
-//               </table>
-//             </div>
-//           </div>
-
-//           {/* Paginación responsiva */}
-//           <div className="flex justify-between mt-4">
-//             <button
-//               onClick={handlePreviousPage}
-//               disabled={pagination.skip === 0}
-//               className={`px-3 sm:px-4 py-2 rounded text-sm sm:text-base ${
-//                 pagination.skip === 0
-//                   ? "bg-gray-300 cursor-not-allowed"
-//                   : "bg-blue-600 text-white hover:bg-blue-700"
-//               }`}
-//             >
-//               Anterior
-//             </button>
-//             <button
-//               onClick={handleNextPage}
-//               disabled={profiles.length < pagination.limit}
-//               className={`px-3 sm:px-4 py-2 rounded text-sm sm:text-base ${
-//                 profiles.length < pagination.limit
-//                   ? "bg-gray-300 cursor-not-allowed"
-//                   : "bg-blue-600 text-white hover:bg-blue-700"
-//               }`}
-//             >
-//               Siguiente
-//             </button>
-//           </div>
-//         </>
-//       )}
-
-//       {/* Modal para crear perfil */}
-//       <CreateProfile 
-//         isOpen={isCreateModalOpen} 
-//         onClose={handleCloseCreateModal} 
-//         onSuccess={handleProfileCreated} 
-//       />
-
-//       {/* Modal para editar perfil */}
-//       <EditProfile 
-//         isOpen={isEditModalOpen} 
-//         onClose={handleCloseEditModal} 
-//         profileId={selectedProfileId} 
-//         onSuccess={handleProfileUpdated}
-//       />
-
-//       {/* Modal para ver detalles del perfil */}
-//       <ProfileDetails
-//         isOpen={isDetailsModalOpen}
-//         onClose={handleCloseDetailsModal}
-//         profileId={selectedProfileId}
-//       />
-//     </div>
-//   );
-// };

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { InputText } from "../atoms/InputText";
 
 export const FormRegister = ({ form = {}, handleChange, errors = {} }) => {
   // Ensure form values are never undefined by providing default empty strings
@@ -28,54 +29,38 @@ export const FormRegister = ({ form = {}, handleChange, errors = {} }) => {
       <div className="space-y-4">
         {/* Email field */}
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Correo electrónico
-          </label>
-          <div className="mt-1">
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={safeForm.email}
-              onChange={handleChange}
-              required
-              className={`appearance-none block w-full px-3 py-2 border ${
-                errors?.email ? 'border-red-300' : 'border-gray-300'
-              } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-              placeholder="tu@email.com"
-              autoComplete="email"
-            />
-            {errors?.email && (
-              <p className="mt-1 text-sm text-red-600" id="email-error">
-                {errors.email}
-              </p>
-            )}
-          </div>
+          <InputText
+            label="Correo electrónico"
+            name="email"
+            type="email"
+            value={safeForm.email}
+            onChange={handleChange}
+            required={true}
+            className={errors?.email ? 'border-red-300' : ''}
+          />
+          {errors?.email && (
+            <p className="mt-1 text-sm text-red-600" id="email-error">
+              {errors.email}
+            </p>
+          )}
         </div>
         
         {/* Password field */}
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-            Contraseña
-          </label>
-          <div className="mt-1 relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              id="password"
+          <div className="relative">
+            <InputText
+              label="Contraseña"
               name="password"
+              type={showPassword ? "text" : "password"}
               value={safeForm.password}
               onChange={handleChange}
-              required
-              className={`appearance-none block w-full px-3 py-2 border ${
-                errors?.password ? 'border-red-300' : 'border-gray-300'
-              } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-              placeholder="Al menos 6 caracteres"
-              autoComplete="new-password"
+              required={true}
+              className={errors?.password ? 'border-red-300 pr-10' : 'pr-10'}
             />
             <button
               type="button"
               onClick={togglePasswordVisibility}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+              className="absolute right-0 top-[30px] pr-3 flex items-center text-sm leading-5"
             >
               {showPassword ? (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -101,27 +86,20 @@ export const FormRegister = ({ form = {}, handleChange, errors = {} }) => {
         
         {/* Confirm Password field */}
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-            Confirmar contraseña
-          </label>
-          <div className="mt-1 relative">
-            <input
-              type={showConfirmPassword ? "text" : "password"}
-              id="confirmPassword"
+          <div className="relative">
+            <InputText
+              label="Confirmar contraseña"
               name="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
               value={safeForm.confirmPassword}
               onChange={handleChange}
-              required
-              className={`appearance-none block w-full px-3 py-2 border ${
-                errors?.confirmPassword ? 'border-red-300' : 'border-gray-300'
-              } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-              placeholder="Repite tu contraseña"
-              autoComplete="new-password"
+              required={true}
+              className={errors?.confirmPassword ? 'border-red-300 pr-10' : 'pr-10'}
             />
             <button
               type="button"
               onClick={toggleConfirmPasswordVisibility}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+              className="absolute right-0 top-[30px] pr-3 flex items-center text-sm leading-5"
             >
               {showConfirmPassword ? (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">

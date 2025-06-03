@@ -1,6 +1,6 @@
 import { apiClient } from "./api";
 
-const BASE_URL = "/api/environments/";
+const BASE_URL = "/api/environments";
 
 /**
  * Crea un nuevo ambiente
@@ -10,22 +10,14 @@ const BASE_URL = "/api/environments/";
  * @returns {Promise<Object>} - El ambiente creado
  */
 export const createEnvironment = async (data) => {
-  try {
-    // Mapear los datos del frontend al formato esperado por el backend
-    const backendData = {
-      title: data.name || data.title,
-      environment_type: data.type || data.environment_type,
-      description: data.description,
-      location: data.location,
-      is_active: data.is_active !== false
-    };
-    
-    const response = await apiClient.post(BASE_URL, backendData);
-    return response.data;
-  } catch (error) {
-    console.error("Error al crear ambiente:", error);
-    throw error;
-  }
+  // Mapear los datos del frontend al formato esperado por el backend
+  const backendData = {
+    title: data.name || data.title,
+    environment_type: data.type || data.environment_type
+  };
+  
+  const response = await apiClient.post(BASE_URL, backendData);
+  return response.data;
 };
 
 /**
@@ -33,13 +25,8 @@ export const createEnvironment = async (data) => {
  * @returns {Promise<Array>} - Lista de ambientes
  */
 export const getEnvironments = async () => {
-  try {
-    const response = await apiClient.get(BASE_URL);
-    return response.data;
-  } catch (error) {
-    console.error("Error al obtener ambientes:", error);
-    throw error;
-  }
+  const response = await apiClient.get(BASE_URL);
+  return response.data;
 };
 
 /**
@@ -48,13 +35,8 @@ export const getEnvironments = async () => {
  * @returns {Promise<Object>} - El ambiente encontrado
  */
 export const getEnvironmentById = async (environmentId) => {
-  try {
-    const response = await apiClient.get(`${BASE_URL}/${environmentId}`);
-    return response.data;
-  } catch (error) {
-    console.error("Error al obtener ambiente:", error);
-    throw error;
-  }
+  const response = await apiClient.get(`${BASE_URL}/${environmentId}`);
+  return response.data;
 };
 
 /**
@@ -66,29 +48,19 @@ export const getEnvironmentById = async (environmentId) => {
  * @returns {Promise<Object>} - El ambiente actualizado
  */
 export const updateEnvironment = async (environmentId, data) => {
-  try {
-    // Mapear los datos del frontend al formato esperado por el backend
-    const backendData = {
-      title: data.name || data.title,
-      environment_type: data.type || data.environment_type,
-      description: data.description,
-      location: data.location,
-      is_active: data.is_active !== false
-    };
-    
-    // Eliminar propiedades undefined
-    Object.keys(backendData).forEach(key => {
-      if (backendData[key] === undefined) {
-        delete backendData[key];
-      }
-    });
-    
-    const response = await apiClient.patch(`${BASE_URL}/${environmentId}`, backendData);
-    return response.data;
-  } catch (error) {
-    console.error("Error al actualizar ambiente:", error);
-    throw error;
+  // Mapear los datos del frontend al formato esperado por el backend
+  const backendData = {};
+  
+  if (data.name || data.title) {
+    backendData.title = data.name || data.title;
   }
+  
+  if (data.type || data.environment_type) {
+    backendData.environment_type = data.type || data.environment_type;
+  }
+  
+  const response = await apiClient.patch(`${BASE_URL}/${environmentId}`, backendData);
+  return response.data;
 };
 
 /**
@@ -97,17 +69,45 @@ export const updateEnvironment = async (environmentId, data) => {
  * @returns {Promise<void>}
  */
 export const deleteEnvironment = async (environmentId) => {
-  try {
-    await apiClient.delete(`${BASE_URL}/${environmentId}`);
-    return true;
-  } catch (error) {
-    console.error("Error al eliminar ambiente:", error);
-    throw error;
-  }
+  await apiClient.delete(`${BASE_URL}/${environmentId}`);
+  return true;
 };
 
 /**
- * Obtiene la etiqueta legible de un tipo de ambiente
+ * Obtiene los ambientes activos (funcionalidad mantenida para compatibilidad)
+ * @returns {Promise<Array>} - Lista de ambientes
+ */
+export const getActiveEnvironments = async () => {
+  // Como el backend no maneja is_active, retornamos todos los ambientes
+  return await getEnvironments();
+};
+
+/**
+ * Obtiene los ambientes por tipo
+ * @param {string} type - Tipo de ambiente a filtrar
+ * @returns {Promise<Array>} - Lista de ambientes del tipo especificado
+ */
+export const getEnvironmentsByType = async (type) => {
+  const environments = await getEnvironments();
+  return environments.filter(env => env.environment_type === type);
+};
+
+/**
+ * Busca ambientes por título
+ * @param {string} query - Término de búsqueda
+ * @returns {Promise<Array>} - Lista de ambientes que coinciden con la búsqueda
+ */
+export const searchEnvironments = async (query) => {
+  const environments = await getEnvironments();
+  const searchTerm = query.toLowerCase();
+  
+  return environments.filter(env => 
+    env.title.toLowerCase().includes(searchTerm)
+  );
+};
+
+/**
+ * Convierte un tipo de ambiente a un formato legible
  * @param {string} type - Tipo de ambiente
  * @returns {string} - Etiqueta legible en español
  */
@@ -121,7 +121,8 @@ export const getEnvironmentTypeLabel = (type) => {
     adolescence: 'Comunidad Adolescentes del Planeta (ErdKinder)',
     high: 'Comunidad Adultos del Planeta'
   };
-  return labels[type] || type || "No especificado";
+  
+  return labels[type] || 'Desconocido';
 };
 
 /**
@@ -163,14 +164,6 @@ export const validateEnvironmentData = (data) => {
     errors.push('El tipo de ambiente es requerido');
   }
   
-  if (!data.location || data.location.trim().length === 0) {
-    errors.push('La ubicación es requerida');
-  }
-  
-  if (!data.description || data.description.trim().length === 0) {
-    errors.push('La descripción es requerida');
-  }
-  
   const validTypes = ['nest', 'community', 'house', 'lower', 'upper', 'adolescence', 'high'];
   if (environmentType && !validTypes.includes(environmentType)) {
     errors.push('El tipo de ambiente no es válido');
@@ -189,20 +182,38 @@ export const validateEnvironmentData = (data) => {
  */
 export const formatEnvironmentForDisplay = (environment) => {
   return {
-    id: environment.id,
-    name: environment.title || "Sin título",  // Mapear title a name
-    type: environment.environment_type,  // Mantener el tipo original
-    typeLabel: getEnvironmentTypeLabel(environment.environment_type),  // Etiqueta legible
-    location: environment.location || "No especificada",
-    description: environment.description || "Sin descripción",
-    is_active: environment.is_active !== false,  // Defaultear a true si no existe
-    created_at: environment.created_at,
-    updated_at: environment.updated_at,
+    ...environment,
+    name: environment.title, // Mapear title a name para compatibilidad con el frontend
+    type: environment.environment_type, // Mapear environment_type a type para compatibilidad
+    typeLabel: getEnvironmentTypeLabel(environment.environment_type),
     createdAtFormatted: environment.created_at ? 
       new Date(environment.created_at).toLocaleDateString('es-ES') : '',
     updatedAtFormatted: environment.updated_at ? 
-      new Date(environment.updated_at).toLocaleDateString('es-ES') : '',
-    areas: environment.areas || [],
-    activities: environment.activities || []
+      new Date(environment.updated_at).toLocaleDateString('es-ES') : ''
+  };
+};
+
+/**
+ * Transforma los datos del frontend al formato del backend
+ * @param {Object} frontendData - Datos del formulario del frontend
+ * @returns {Object} - Datos formateados para el backend
+ */
+export const transformToBackendFormat = (frontendData) => {
+  return {
+    title: frontendData.name || frontendData.title,
+    environment_type: frontendData.type || frontendData.environment_type
+  };
+};
+
+/**
+ * Transforma los datos del backend al formato del frontend
+ * @param {Object} backendData - Datos del backend
+ * @returns {Object} - Datos formateados para el frontend
+ */
+export const transformToFrontendFormat = (backendData) => {
+  return {
+    ...backendData,
+    name: backendData.title,
+    type: backendData.environment_type
   };
 };

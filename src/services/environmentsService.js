@@ -164,8 +164,9 @@ export const getEnvironmentStatusLabel = (status) => {
   const labels = {
     active: 'Activo',
     inactive: 'Inactivo',
-    maintenance: 'En Mantenimiento',
-    planned: 'Planificado'
+  maintenance: 'En Mantenimiento',
+    planned: 'Planificado',
+    reserved: 'Reservado'
   };
   
   return labels[status] || 'Desconocido';
@@ -192,11 +193,11 @@ export const getEnvironmentTypeOptions = () => {
  * @returns {Array} - Lista de opciones para formularios
  */
 export const getEnvironmentStatusOptions = () => {
-  return [
-    { value: 'active', label: 'Activo' },
+  return [    { value: 'active', label: 'Activo' },
     { value: 'inactive', label: 'Inactivo' },
     { value: 'maintenance', label: 'En Mantenimiento' },
-    { value: 'planned', label: 'Planificado' }
+    { value: 'planned', label: 'Planificado' },
+    { value: 'reserved', label: 'Reservado' }
   ];
 };
 
@@ -223,8 +224,7 @@ export const validateEnvironmentData = (data, isUpdate = false) => {
   if (data.environment_type && !validTypes.includes(data.environment_type)) {
     throw new Error('El tipo de ambiente no es válido');
   }
-  
-  const validStatuses = ['active', 'inactive', 'maintenance', 'planned'];
+    const validStatuses = ['active', 'inactive', 'maintenance', 'planned', 'reserved'];
   if (data.environment_status && !validStatuses.includes(data.environment_status)) {
     throw new Error('El estado del ambiente no es válido');
   }

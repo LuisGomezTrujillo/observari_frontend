@@ -248,8 +248,14 @@ export const ListEnvironments = () => {
     loadData();
   };
 
-  const handleEnvironmentUpdated = () => {
-    loadData();
+  const handleEnvironmentUpdated = async () => {
+    await loadData(); // Recargar todos los ambientes
+    setIsEditModalOpen(false);
+    // Forzar la recarga de los detalles al volver a abrir el modal
+    if (isDetailsModalOpen) {
+      setIsDetailsModalOpen(false);
+      setTimeout(() => setIsDetailsModalOpen(true), 100);
+    }
   };
 
   // Manejadores para filtros
@@ -544,32 +550,31 @@ export const ListEnvironments = () => {
                       {filteredEnvironments.map((environment) => (
                         <tr key={environment.id} className="hover:bg-gray-50">
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {environment.id}
-                          </td>
-                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {environment.id}                          </td><td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {environment.name || environment.title || "N/A"}
-                          </td>
-                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          </td><td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                             <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
                               {environment.typeLabel || getEnvironmentTypeLabel(environment.type || environment.environment_type) || "N/A"}
                             </span>
-                          </td>
-                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          </td><td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {environment.location || "N/A"}
-                          </td>
-                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          </td><td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              environment.is_active !== false
-                                ? "bg-green-100 text-green-800" 
+                              environment.environment_status === 'active'
+                                ? "bg-green-100 text-green-800"
+                                : environment.environment_status === 'maintenance'
+                                ? "bg-yellow-100 text-yellow-800"
+                                : environment.environment_status === 'reserved'
+                                ? "bg-blue-100 text-blue-800"
                                 : "bg-red-100 text-red-800"
                             }`}>
-                              {environment.is_active !== false ? "Activo" : "Inactivo"}
+                              {environment.environment_status === 'active' ? "Activo" 
+                               : environment.environment_status === 'maintenance' ? "En Mantenimiento"
+                               : environment.environment_status === 'reserved' ? "Reservado"                               : "Inactivo"}
                             </span>
-                          </td>
-                          <td className="px-4 sm:px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                          </td><td className="px-4 sm:px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
                             {environment.description || 'Sin descripción'}
-                          </td>
-                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          </td><td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex justify-end space-x-2">
                               <button
                                 onClick={() => handleViewDetails(environment.id)}
@@ -658,19 +663,23 @@ export const ListEnvironments = () => {
       />
 
       {/* Modal para editar ambiente */}
-      <EditEnvironment 
-        isOpen={isEditModalOpen} 
-        onClose={handleCloseEditModal} 
-        environmentId={selectedEnvironmentId} 
-        onSuccess={handleEnvironmentUpdated}
-      />
-
+      {isEditModalOpen && (
+        <EditEnvironment
+          isOpen={isEditModalOpen}
+          onClose={handleCloseEditModal}
+          environmentId={selectedEnvironmentId}
+          onSuccess={handleEnvironmentUpdated}
+        />
+      )}
+      
       {/* Modal para ver detalles del ambiente */}
-      <EnvironmentDetails
-        isOpen={isDetailsModalOpen}
-        onClose={handleCloseDetailsModal}
-        environmentId={selectedEnvironmentId}
-      />
+      {isDetailsModalOpen && (
+        <EnvironmentDetails
+          isOpen={isDetailsModalOpen}
+          onClose={handleCloseDetailsModal}
+          environmentId={selectedEnvironmentId}
+        />
+      )}
     </div>
   );
 };

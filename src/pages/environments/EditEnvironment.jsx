@@ -8,11 +8,17 @@ export const EditEnvironment = ({ isOpen, onClose, environmentId, onSuccess }) =
   const { safeRequest } = useSessionAwareRequest();
   
   const [form, setForm] = useState({
-    name: "",
+    title: "",
     environment_type: "",
+    environment_status: "active",
     location: "",
+    capacity: "",
+    availability: "",
     description: "",
-    is_active: true
+    photo_url: "",
+    id: "",
+    created_at: "",
+    updated_at: ""
   });
 
   const [errors, setErrors] = useState({});
@@ -30,7 +36,8 @@ export const EditEnvironment = ({ isOpen, onClose, environmentId, onSuccess }) =
     setIsLoading(true);
     setSubmitError("");
 
-    try {      const data = await safeRequest(
+    try {
+      const data = await safeRequest(
         () => getEnvironmentById(environmentId),
         setSubmitError,
         "Tu sesión ha expirado mientras se cargaba el ambiente. Por favor, inicia sesión nuevamente."
@@ -38,11 +45,17 @@ export const EditEnvironment = ({ isOpen, onClose, environmentId, onSuccess }) =
 
       if (data) {
         setForm({
-          name: data.name || "",
+          title: data.title || "",
           environment_type: data.environment_type || "",
+          environment_status: data.environment_status || "active",
           location: data.location || "",
+          capacity: data.capacity || "",
+          availability: data.availability || "",
           description: data.description || "",
-          is_active: data.is_active !== false
+          photo_url: data.photo_url || "",
+          id: data.id || "",
+          created_at: data.created_at || "",
+          updated_at: data.updated_at || ""
         });
       }
     } catch (error) {
@@ -75,8 +88,8 @@ export const EditEnvironment = ({ isOpen, onClose, environmentId, onSuccess }) =
   const validateForm = () => {
     const newErrors = {};
     
-    if (!form.name?.trim()) {
-      newErrors.name = "El nombre es requerido";
+    if (!form.title?.trim()) {
+      newErrors.title = "El nombre del ambiente es requerido";
     }
     
     if (!form.environment_type) {
@@ -87,8 +100,12 @@ export const EditEnvironment = ({ isOpen, onClose, environmentId, onSuccess }) =
       newErrors.location = "La ubicación es requerida";
     }
     
-    if (!form.description?.trim()) {
-      newErrors.description = "La descripción es requerida";
+    if (!form.capacity) {
+      newErrors.capacity = "La capacidad es requerida";
+    }
+
+    if (!form.availability?.trim()) {
+      newErrors.availability = "La disponibilidad es requerida";
     }
 
     setErrors(newErrors);
@@ -106,9 +123,13 @@ export const EditEnvironment = ({ isOpen, onClose, environmentId, onSuccess }) =
       const result = await safeRequest(
         () => updateEnvironment(environmentId, {
           ...form,
-          name: form.name.trim(),
+          title: form.title.trim(),
           location: form.location.trim(),
-          description: form.description.trim()
+          description: form.description?.trim(),
+          capacity: Number(form.capacity),
+          environment_type: form.environment_type,
+          environment_status: form.environment_status,
+          availability: form.availability.trim()
         }),
         setSubmitError,
         "Tu sesión ha expirado mientras se actualizaba el ambiente. Por favor, inicia sesión nuevamente."
@@ -116,7 +137,8 @@ export const EditEnvironment = ({ isOpen, onClose, environmentId, onSuccess }) =
 
       if (result) {
         if (onSuccess) {
-          onSuccess();
+          // Asegurarse de que el callback de éxito reciba los datos actualizados
+          onSuccess(result);
         }
         onClose();
       }

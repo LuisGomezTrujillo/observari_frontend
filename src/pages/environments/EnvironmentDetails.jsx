@@ -1,30 +1,39 @@
 import React, { useState, useEffect } from "react";
-import { getEnvironmentById, getEnvironmentTypeLabel } from "../../services/environmentsService";
+import { getEnvironmentById, getEnvironmentTypeLabel, getEnvironmentStatusLabel } from "../../services/environmentsService";
 import { Modal } from "../../components/molecules/Modal";
+import { useSessionAwareRequest } from "../../hooks/useSessionAwareRequest";
 
 export const EnvironmentDetails = ({ isOpen, onClose, environmentId }) => {
+  const { safeRequest } = useSessionAwareRequest();
   const [environment, setEnvironment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchEnvironmentDetails = async () => {
-      if (!environmentId) return;
+  const fetchEnvironmentDetails = async () => {
+    if (!environmentId) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
       
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const environmentData = await getEnvironmentById(environmentId);
+      const environmentData = await safeRequest(
+        () => getEnvironmentById(environmentId),
+        setError,
+        "Tu sesión ha expirado mientras se cargaban los detalles. Por favor, inicia sesión nuevamente."
+      );
+      
+      if (environmentData) {
         setEnvironment(environmentData);
-      } catch (err) {
-        console.error("Error al cargar detalles del ambiente:", err);
-        setError("Error al cargar los detalles del ambiente. Por favor intente nuevamente.");
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error("Error al cargar detalles del ambiente:", err);
+      setError("Error al cargar los detalles del ambiente. Por favor intente nuevamente.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (isOpen && environmentId) {
       fetchEnvironmentDetails();
     }
@@ -40,15 +49,6 @@ export const EnvironmentDetails = ({ isOpen, onClose, environmentId }) => {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
-
-  const getStatusInfo = (isActive) => {
-    return {
-      label: isActive ? "Activo" : "Inactivo",
-      className: isActive
-        ? "inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800"
-        : "inline-flex px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800"
-    };
   };
 
   return (
@@ -69,26 +69,44 @@ export const EnvironmentDetails = ({ isOpen, onClose, environmentId }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <p className="text-xs md:text-sm font-medium text-gray-500">Nombre</p>
-                <p className="text-sm md:text-base mt-1 break-all">{environment.name || environment.title || "Sin título"}</p>
+                <p className="text-sm md:text-base mt-1 break-all">{environment.title || "Sin título"}</p>
               </div>
               <div>
                 <p className="text-xs md:text-sm font-medium text-gray-500">Tipo de Ambiente</p>
-                <p className="text-sm md:text-base mt-1">{getEnvironmentTypeLabel(environment.type || environment.environment_type) || "No especificado"}</p>
+                <p className="text-sm md:text-base mt-1">{getEnvironmentTypeLabel(environment.environment_type) || "No especificado"}</p>
               </div>
               <div>
                 <p className="text-xs md:text-sm font-medium text-gray-500">Estado</p>
-                <span className={getStatusInfo(environment.is_active).className}>
-                  {getStatusInfo(environment.is_active).label}
+                <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+                  {getEnvironmentStatusLabel(environment.environment_status) || "No especificado"}
                 </span>
               </div>
               <div>
                 <p className="text-xs md:text-sm font-medium text-gray-500">Ubicación</p>
                 <p className="text-sm md:text-base mt-1">{environment.location || "No especificada"}</p>
               </div>
+              <div>
+                <p className="text-xs md:text-sm font-medium text-gray-500">Capacidad</p>
+                <p className="text-sm md:text-base mt-1">{environment.capacity || "No especificada"}</p>
+              </div>
+              <div>
+                <p className="text-xs md:text-sm font-medium text-gray-500">Disponibilidad</p>
+                <p className="text-sm md:text-base mt-1">{environment.availability || "No especificada"}</p>
+              </div>
               <div className="sm:col-span-2">
                 <p className="text-xs md:text-sm font-medium text-gray-500">Descripción</p>
                 <p className="text-sm md:text-base mt-1 whitespace-pre-wrap">{environment.description || "Sin descripción"}</p>
               </div>
+              {environment.photo_url && (
+                <div className="sm:col-span-2">
+                  <p className="text-xs md:text-sm font-medium text-gray-500">Foto</p>
+                  <img 
+                    src={environment.photo_url} 
+                    alt="Imagen del ambiente" 
+                    className="mt-2 rounded-lg max-h-64 w-auto object-contain"
+                  />
+                </div>
+              )}
             </div>
           </div>
           
@@ -110,14 +128,6 @@ export const EnvironmentDetails = ({ isOpen, onClose, environmentId }) => {
               </div>
             </div>
           </div>
-          
-          {/* Información Adicional (si existe) */}
-          {environment.additional_info && (
-            <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
-              <h3 className="text-base md:text-lg font-medium text-gray-900 mb-2">Información Adicional</h3>
-              <p className="text-sm md:text-base whitespace-pre-wrap break-words">{environment.additional_info}</p>
-            </div>
-          )}
           
           <div className="pt-2 flex justify-end">
             <button

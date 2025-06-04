@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getEnvironmentById, getEnvironmentTypeLabel, getEnvironmentStatusLabel } from "../../services/environmentsService";
+import { getEnvironmentById, getEnvironmentTypeLabel, getEnvironmentStatusLabel, formatEnvironmentForDisplay } from "../../services/environmentsService";
 import { Modal } from "../../components/molecules/Modal";
 import { useSessionAwareRequest } from "../../hooks/useSessionAwareRequest";
 
@@ -23,7 +23,7 @@ export const EnvironmentDetails = ({ isOpen, onClose, environmentId }) => {
       );
       
       if (environmentData) {
-        setEnvironment(environmentData);
+        setEnvironment(formatEnvironmentForDisplay(environmentData));
       }
     } catch (err) {
       console.error("Error al cargar detalles del ambiente:", err);
@@ -38,18 +38,6 @@ export const EnvironmentDetails = ({ isOpen, onClose, environmentId }) => {
       fetchEnvironmentDetails();
     }
   }, [isOpen, environmentId]);
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Detalles del Ambiente">
@@ -117,14 +105,13 @@ export const EnvironmentDetails = ({ isOpen, onClose, environmentId }) => {
               <div>
                 <p className="text-xs md:text-sm font-medium text-gray-500">ID del Ambiente</p>
                 <p className="text-sm md:text-base mt-1 break-all">{environment.id}</p>
-              </div>
-              <div className="sm:col-span-2 md:col-span-1">
+              </div>              <div className="sm:col-span-2 md:col-span-1">
                 <p className="text-xs md:text-sm font-medium text-gray-500">Fecha de Creación</p>
-                <p className="text-sm md:text-base mt-1">{formatDate(environment.created_at)}</p>
+                <p className="text-sm md:text-base mt-1">{environment.createdAtFormatted}</p>
               </div>
               <div className="sm:col-span-2 md:col-span-1">
                 <p className="text-xs md:text-sm font-medium text-gray-500">Última Actualización</p>
-                <p className="text-sm md:text-base mt-1">{formatDate(environment.updated_at)}</p>
+                <p className="text-sm md:text-base mt-1">{environment.updatedAtFormatted}</p>
               </div>
             </div>
           </div>

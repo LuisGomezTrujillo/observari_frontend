@@ -297,11 +297,10 @@ const formatDateTime = (dateTimeString) => {
   try {
     const date = new Date(dateTimeString);
     if (isNaN(date.getTime())) return '';
-    
-    return date.toLocaleDateString('es-ES', {
+      return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
       year: 'numeric',
-      month: 'long',
-      day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });

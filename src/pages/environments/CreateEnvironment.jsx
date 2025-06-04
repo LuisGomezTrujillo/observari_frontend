@@ -8,11 +8,14 @@ export const CreateEnvironment = ({ isOpen, onClose, onSuccess }) => {
   const { safeRequest } = useSessionAwareRequest();
   
   const [form, setForm] = useState({
-    name: "",
+    title: "",
     environment_type: "",
+    environment_status: "active",
     location: "",
+    capacity: "",
+    availability: "",
     description: "",
-    is_active: true
+    photo_url: ""
   });
 
   const [errors, setErrors] = useState({});
@@ -38,8 +41,8 @@ export const CreateEnvironment = ({ isOpen, onClose, onSuccess }) => {
   const validateForm = () => {
     const newErrors = {};
     
-    if (!form.name?.trim()) {
-      newErrors.name = "El nombre es requerido";
+    if (!form.title?.trim()) {
+      newErrors.title = "El nombre del ambiente es requerido";
     }
     
     if (!form.environment_type) {
@@ -50,8 +53,12 @@ export const CreateEnvironment = ({ isOpen, onClose, onSuccess }) => {
       newErrors.location = "La ubicación es requerida";
     }
     
-    if (!form.description?.trim()) {
-      newErrors.description = "La descripción es requerida";
+    if (!form.capacity) {
+      newErrors.capacity = "La capacidad es requerida";
+    }
+
+    if (!form.availability?.trim()) {
+      newErrors.availability = "La disponibilidad es requerida";
     }
 
     setErrors(newErrors);
@@ -69,9 +76,10 @@ export const CreateEnvironment = ({ isOpen, onClose, onSuccess }) => {
       const result = await safeRequest(
         () => createEnvironment({
           ...form,
-          name: form.name.trim(),
+          title: form.title.trim(),
           location: form.location.trim(),
-          description: form.description.trim()
+          description: form.description?.trim(),
+          capacity: Number(form.capacity)
         }),
         setSubmitError,
         "Tu sesión ha expirado mientras se creaba el ambiente. Por favor, inicia sesión nuevamente."

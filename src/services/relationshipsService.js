@@ -7,8 +7,8 @@ const BASE_URL = "/api/relationships";
  * @param {Object} data - Datos de la relación
  * @param {number} data.user_id - ID del usuario origen
  * @param {number} data.related_user_id - ID del usuario destino
- * @param {string} data.relationship_type - Tipo de relación (friend, family, colleague, acquaintance, other)
- * @param {string} data.description - Descripción opcional de la relación
+ * @param {string} data.relationship_type - Tipo de relación (team, classmate, family, sponsor)
+ * @param {string} [data.description] - Descripción opcional de la relación
  * @returns {Promise<Object>} - La relación creada
  */
 export const createRelationship = async (data) => {
@@ -17,23 +17,11 @@ export const createRelationship = async (data) => {
 };
 
 /**
- * Obtiene todas las relaciones (con paginación)
- * @param {number} skip - Número de registros a saltar (para paginación)
- * @param {number} limit - Límite de registros a devolver
+ * Obtiene todas las relaciones
  * @returns {Promise<Array>} - Lista de relaciones
  */
-export const getRelationships = async (skip = 0, limit = 100) => {
-  const response = await apiClient.get(`${BASE_URL}?skip=${skip}&limit=${limit}`);
-  return response.data;
-};
-
-/**
- * Obtiene todas las relaciones de un usuario específico
- * @param {number} userId - ID del usuario
- * @returns {Promise<Array>} - Lista de relaciones del usuario
- */
-export const getUserRelationships = async (userId) => {
-  const response = await apiClient.get(`${BASE_URL}/user/${userId}`);
+export const getRelationships = async () => {
+  const response = await apiClient.get(BASE_URL);
   return response.data;
 };
 
@@ -63,45 +51,24 @@ export const updateRelationship = async (relationshipId, data) => {
 /**
  * Elimina una relación existente
  * @param {number} relationshipId - ID de la relación a eliminar
- * @returns {Promise<void>}
+ * @returns {Promise<Object>} - Respuesta de confirmación
  */
 export const deleteRelationship = async (relationshipId) => {
-  await apiClient.delete(`${BASE_URL}/${relationshipId}`);
-  return true;
-};
-
-/**
- * Obtiene la relación entre dos usuarios específicos
- * @param {number} userId - ID del usuario origen
- * @param {number} relatedUserId - ID del usuario destino
- * @returns {Promise<Object>} - La relación encontrada entre ambos usuarios
- */
-export const getRelationshipBetweenUsers = async (userId, relatedUserId) => {
-  const response = await apiClient.get(`${BASE_URL}/between/${userId}/${relatedUserId}`);
-  return response.data;
-};
-
-/**
- * Obtiene las relaciones mutuas de un usuario
- * @param {number} userId - ID del usuario
- * @returns {Promise<Array>} - Lista de relaciones mutuas
- */
-export const getMutualRelationships = async (userId) => {
-  const response = await apiClient.get(`${BASE_URL}/mutual/${userId}`);
+  const response = await apiClient.delete(`${BASE_URL}/${relationshipId}`);
   return response.data;
 };
 
 /**
  * Convierte un tipo de relación a un formato legible
- * @param {string} type - Tipo de relación (friend, family, colleague, acquaintance, other)
+ * @param {string} type - Tipo de relación (team, classmate, family, sponsor)
  * @returns {string} - Etiqueta legible en español
  */
 export const getRelationshipTypeLabel = (type) => {
   const labels = {
-    team: 'team',
-    classmate: 'classmate',
-    family: 'family',
-    sponsor: 'sponsor',
+    team: 'Equipo Casa del Bambino',
+    classmate: 'Compañero aprendiz',
+    family: 'Familiar',
+    sponsor: 'Padrino, Madrina o Patrocinador',
   };
   
   return labels[type] || 'Desconocido';
@@ -116,6 +83,6 @@ export const getRelationshipTypeOptions = () => {
     { value: 'team', label: 'Equipo Casa del Bambino' },
     { value: 'classmate', label: 'Compañero aprendiz' },
     { value: 'family', label: 'Familiar' },
-    { value: 'sponsor', label: 'Padrino, Madrina o Patrocinador' }
+    { value: 'sponsor', label: 'Padrino o Madrina' }
   ];
 };

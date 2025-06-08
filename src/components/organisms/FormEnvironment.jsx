@@ -1,6 +1,6 @@
 import React from "react";
 import { InputText } from "../atoms/InputText";
-import { SelectInput } from "../atoms/SelectiInput";
+import { SelectInput } from "../atoms/SelectInput";
 import { InputNumber } from "../atoms/InputNumber";
 import { TextArea } from "../atoms/TextArea"; // Asumiendo que existe este componente
 

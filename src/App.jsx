@@ -17,7 +17,16 @@ import { ListRelationships } from "./pages/relationships/ListRelationships";
 import { CreateRelationship } from "./pages/relationships/CreateRelationship";
 import { EditRelationship } from "./pages/relationships/EditRelationship";
 import { ListEnvironments } from "./pages/environments/ListEnvironments";
-import { ListAreas } from "./pages/areas/ListAreas"; // Nuevo import
+import { CreateEnvironment } from "./pages/environments/CreateEnvironment";
+import { EditEnvironment } from "./pages/environments/EditEnvironment";
+import { ListAreas } from "./pages/areas/ListAreas";
+import { CreateArea } from "./pages/areas/CreateArea";
+import { EditArea } from "./pages/areas/EditArea";
+import { ListMaterials } from "./pages/materials/ListMaterials";
+import { CreateMaterial } from "./pages/materials/CreateMaterial";
+import { EditMaterial } from "./pages/materials/EditMaterial";
+
+
 import { Login } from "./pages/auth/Login";
 
 export default function App() {
@@ -44,9 +53,10 @@ export default function App() {
                 <Route path="/profiles/:id" element={<EditProfile />} />
                 <Route path="/relationships" element={<ListRelationships />} />
                 <Route path="/relationships/create" element={<CreateRelationship />} />
-                <Route path="/relationships/:id" element={<EditRelationship />} />
-                <Route path="/environments" element={<ListEnvironments />} />
-                <Route path="/areas" element={<ListAreas />} /> {/* Nueva ruta protegida */}
+                <Route path="/relationships/:id" element={<EditRelationship />} />                <Route path="/environments" element={<ListEnvironments />} />
+                <Route path="/areas" element={<ListAreas />} />
+                <Route path="/materials" element={<ListMaterials />} />
+
               </Route>
 
               {/* Ruta de fallback */}

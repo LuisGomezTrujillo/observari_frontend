@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { InputText } from "../atoms/InputText";
-import { SelectInput } from "../atoms/SelectiInput";
+import { SelectInput } from "../atoms/SelectInput";
 import { getUsers } from "../../services/usersService";
 
 export const FormProfile = ({ form, handleChange }) => {

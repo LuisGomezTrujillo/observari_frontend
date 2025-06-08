@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Home, User, Handshake, TreeDeciduous, Blocks, Contact, LogIn, LogOut } from "lucide-react";
+import { Menu, X, Home, User, Handshake, TreeDeciduous, Blocks, Shapes, Contact, LogIn, LogOut } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Login } from "../../pages/auth/Login";
 import { Register } from "../../pages/auth/Register"; // Importamos el componente Register
@@ -112,6 +112,10 @@ export const Navbar = () => {
                 <Blocks className="w-4 h-4" />
                 <Link to="/areas" className="hover:underline">Areas</Link>
               </li>
+              <li className="flex items-center gap-1">
+                <Shapes className="w-4 h-4" />
+                <Link to="/materials" className="hover:underline">Materiales</Link>
+              </li>
             </>
           )}
         </ul>
@@ -145,6 +149,10 @@ export const Navbar = () => {
               <li className="flex items-center gap-1">
                 <Blocks className="w-4 h-4" />
                 <Link to="/areas" className="hover:underline">Areas</Link>
+              </li>
+              <li className="flex items-center gap-1">
+                <Shapes className="w-4 h-4" />
+                <Link to="/materials" className="hover:underline">Materiales</Link>
               </li>
               </>
             )}

@@ -90,7 +90,18 @@ export const FormArea = ({ form, handleChange, errors = {} }) => {
             rows={4}
             error={errors.description}
           />
+          <InputText
+            label="URL de Foto"
+            name="photo_url"
+            value={form.photo_url || ""}
+            onChange={handleChange}
+            error={errors.photo_url}
+            placeholder="https://ejemplo.com/foto-ambiente.jpg"
+            type="url"
+          />
         </div>
+
+        
       </div>
     </div>
   );

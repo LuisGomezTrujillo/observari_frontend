@@ -17,6 +17,7 @@ import { ListRelationships } from "./pages/relationships/ListRelationships";
 import { CreateRelationship } from "./pages/relationships/CreateRelationship";
 import { EditRelationship } from "./pages/relationships/EditRelationship";
 import { ListEnvironments } from "./pages/environments/ListEnvironments";
+import { ListAreas } from "./pages/areas/ListAreas"; // Nuevo import
 import { Login } from "./pages/auth/Login";
 
 export default function App() {
@@ -45,6 +46,7 @@ export default function App() {
                 <Route path="/relationships/create" element={<CreateRelationship />} />
                 <Route path="/relationships/:id" element={<EditRelationship />} />
                 <Route path="/environments" element={<ListEnvironments />} />
+                <Route path="/areas" element={<ListAreas />} /> {/* Nueva ruta protegida */}
               </Route>
 
               {/* Ruta de fallback */}

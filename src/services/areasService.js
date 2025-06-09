@@ -1,3 +1,4 @@
+import { article } from 'framer-motion/client';
 import { apiClient } from './api.js';
 
 const URL = "api/areas";
@@ -279,6 +280,47 @@ export const getAreasByType = async (areaType, setError = null) => {
     throw error;
   }
 };
+
+
+
+
+/**
+ * Convierte un tipo de ambiente a un formato legible
+ * @param {string} type - Tipo de ambiente
+ * @returns {string} - Etiqueta legible en español
+ */
+export const getAreasLabel = (type) => {
+  const labels = {
+    practical_life: 'Vida práctica',
+    sensorial: 'Sensorial',
+    language: 'Lenguaje',
+    mathematics: 'Matemáticas',
+    cultural: 'Cultura',
+    science: 'Ciencias',
+    geography: 'Geografía',
+    history: 'Historia',
+    cosmic_education: 'Educación cósmica',
+    art: 'Artes',
+    music: 'Música',
+    emotional_education: 'Educación emocional',
+    movement: 'Movimiento',
+    reading_writing: 'Lecto-escritura',
+    social_studies: 'Estudios sociales',
+    ecology: 'Ecología',
+    technology: 'Tecnología',
+    second_language: 'Segunda lengua',
+    peace_education: 'Educación para la paz'
+
+
+
+
+
+  };
+  
+  return labels[type] || 'Desconocido';
+};
+
+
 
 /**
  * Función auxiliar para validar datos del área antes del envío

@@ -72,7 +72,7 @@ export const CreateMaterial = ({ isOpen, onClose, onSuccess }) => {
         area_id: parseInt(form.area_id, 10)
       };
   
-      console.log('Sending data:', formData);
+      console.log('Creando material:', formData);
       await createMaterial(formData, setError);
       
       alert("Material creado exitosamente");

@@ -7,12 +7,16 @@ import { getAreas } from "../../services/areasService";
 export const FormMaterial = ({ form, handleChange, errors = {} }) => {
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     const loadAreas = async () => {
       try {
-        const data = await getAreas();
-        setAreas(data);
+        setLoading(true);
+        const data = await getAreas(error => {
+          console.error("Error al cargar áreas:", error);
+        });
+        if (data) {
+          setAreas(data);
+        }
       } catch (error) {
         console.error("Error al cargar áreas:", error);
       } finally {

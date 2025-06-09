@@ -44,14 +44,14 @@ export const MaterialDetails = ({ isOpen, onClose, materialId }) => {
       minute: '2-digit'
     });
   };
-
   // Función para obtener el color y texto del estado
   const getStatusDisplay = (status) => {
     const statusConfig = {
       in_use: { bg: 'bg-green-100', text: 'text-green-800', label: 'En uso' },
       available: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Disponible' },
       repair: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'En reparación' },
-      discarded: { bg: 'bg-red-100', text: 'text-red-800', label: 'Descartado' }
+      discarded: { bg: 'bg-red-100', text: 'text-red-800', label: 'Descartado' },
+      pending: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Pendiente' }
     };
 
     const config = statusConfig[status] || { bg: 'bg-gray-100', text: 'text-gray-800', label: status };

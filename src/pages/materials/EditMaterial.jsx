@@ -101,7 +101,7 @@ export const EditMaterial = ({ isOpen, onClose, materialId, onSuccess }) => {
         area_id: parseInt(form.area_id, 10)
       };
   
-      console.log('Updating material:', materialId, formData);
+      console.log('Actualizando material:', materialId, formData);
       await updateMaterial(materialId, formData, setError);
       
       alert("Material actualizado exitosamente");

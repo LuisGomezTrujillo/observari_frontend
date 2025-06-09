@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { getAreas, deleteArea } from '../../services/areasService';
+import { getAreasLabel, deleteArea, getAreas } from '../../services/areasService';
 import { useSessionAwareRequest } from '../../hooks/useSessionAwareRequest';
 import { CreateArea } from './CreateArea';
 import { EditArea } from './EditArea';
 import { AreaDetails } from './AreaDetails';
+import { getEnvironmentTypeLabel } from '../../services/environmentsService';
 
 export const ListAreas = () => {
   const navigate = useNavigate();
@@ -461,7 +462,9 @@ export const ListAreas = () => {
                           </td>
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                             <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                              {area.area_type || 'N/A'}
+                              {getAreasLabel
+                                ? getAreasLabel(area.area_type || area.type) || 'N/A'
+                                : area.area_type || area.type || 'N/A'}
                             </span>
                           </td>
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">

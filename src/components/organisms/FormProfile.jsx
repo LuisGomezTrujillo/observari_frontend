@@ -81,7 +81,7 @@ export const FormProfile = ({ form, handleChange }) => {
             label="Rol"
             name="role"
             value={form.role}
-            options={["Administrador", "Guía", "Asistente", "Estudiante", "Acudiente", "Padrino"]}
+            options={["Administrador", "Guía", "Asistente", "Aprendiz", "Acudiente", "Benefactor o Patrocinador"]}
             onChange={handleChange}
           />
           <SelectInput

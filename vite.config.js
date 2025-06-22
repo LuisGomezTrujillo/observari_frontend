@@ -16,10 +16,28 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'https://observari-backend.onrender.com',
         changeOrigin: true,
         secure: false,
       }
     }
   }
 });
+
+
+// import { defineConfig } from 'vite';
+// import react from '@vitejs/plugin-react';
+// import tailwindcss from '@tailwindcss/vite';
+
+// export default defineConfig({
+//   plugins: [react(), tailwindcss()],
+//   server: {
+//     proxy: {
+//       '/api': {
+//         target: 'http://localhost:8000',
+//         changeOrigin: true,
+//         secure: false,
+//       }
+//     }
+//   }
+// });
